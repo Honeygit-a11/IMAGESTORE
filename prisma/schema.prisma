@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AuthProvider {
+  CREDENTIALS
+  GOOGLE
+}
+
+enum WorkspaceRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+}
+
+enum UploadStatus {
+  PENDING
+  UPLOADING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum TokenType {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+model User {
+  id               String       @id @default(cuid())
+  name             String?
+  email            String       @unique
+  passwordHash     String?
+  emailVerified    DateTime?
+  image            String?
+  authProvider     AuthProvider @default(CREDENTIALS)
+  storageUsedBytes BigInt       @default(0)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Relationships
+  ownedWorkspaces    Workspace[]           @relation("WorkspaceOwner")
+  memberships        WorkspaceMember[]
+  invitationsSent    WorkspaceInvitation[] @relation("InvitedByUser")
+  uploadedImages     Image[]               @relation("UploadedByUser")
+  trashedImages      Image[]               @relation("DeletedByUser")
+  activityLogs       ActivityLog[]
+  sessions           UserSession[]
+
+  @@index([email])
+}
+
+model Workspace {
+  id               String   @id @default(cuid())
+  name             String
+  ownerId          String
+  storageUsedBytes BigInt   @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relationships
+  owner        User                  @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members      WorkspaceMember[]
+  invitations  WorkspaceInvitation[]
+  images       Image[]
+  tags         Tag[]
+  activityLogs ActivityLog[]
+
+  @@index([ownerId])
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(VIEWER)
+  joinedAt    DateTime      @default(now())
+
+  // Relationships
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model WorkspaceInvitation {
+  id          String           @id @default(cuid())
+  workspaceId String
+  email       String
+  role        WorkspaceRole    @default(VIEWER)
+  invitedById String
+  token       String           @unique
+  status      InvitationStatus @default(PENDING)
+  expiresAt   DateTime
+  createdAt   DateTime         @default(now())
+
+  // Relationships
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("InvitedByUser", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, email])
+  @@index([workspaceId, status])
+  @@index([token])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model Image {
+  id               String       @id @default(cuid())
+  workspaceId      String
+  uploadedById     String
+  fileName         String
+  originalFileName String
+  fileType         String
+  fileSize         BigInt
+  storageKey       String
+  thumbnailKey     String?
+  uploadStatus     UploadStatus @default(PENDING)
+
+  // Trash & Soft Deletion
+  deletedAt         DateTime?
+  deletedById       String?
+  permanentDeleteAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  workspace  Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  uploadedBy User       @relation("UploadedByUser", fields: [uploadedById], references: [id], onDelete: Cascade)
+  deletedBy  User?      @relation("DeletedByUser", fields: [deletedById], references: [id], onDelete: SetNull)
+  tags       ImageTag[]
+
+  @@index([workspaceId, deletedAt])
+  @@index([workspaceId, fileName])
+  @@index([uploadedById])
+  @@index([deletedAt])
+  @@index([permanentDeleteAt])
+  @@index([uploadStatus])
+}
+
+model Tag {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  createdAt   DateTime @default(now())
+
+  // Relationships
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  images    ImageTag[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+}
+
+model ImageTag {
+  id      String @id @default(cuid())
+  imageId String
+  tagId   String
+
+  // Relationships
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([imageId, tagId])
+  @@index([imageId])
+  @@index([tagId])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String?
+  action      String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  // Relationships
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([userId])
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  sessionToken String   @unique
+  userAgent    String?
+  ipAddress    String?
+  lastActiveAt DateTime @default(now())
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([expiresAt])
+}
+
+model VerificationToken {
+  id         String    @id @default(cuid())
+  identifier String
+  token      String    @unique
+  type       TokenType
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+
+  @@unique([identifier, token, type])
+  @@index([identifier, type])
+  @@index([token])
+}
