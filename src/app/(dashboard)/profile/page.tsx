@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   FolderKanban,
   Loader2,
-  AlertCircle,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 

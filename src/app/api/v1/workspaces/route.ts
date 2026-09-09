@@ -60,6 +60,7 @@ export async function GET(req: NextRequest) {
     return apiSuccess(workspaces, {
       total: totalWorkspaces,
       limit: 2,
+      canCreate,
     });
   } catch (error) {
     return handleApiError(error);

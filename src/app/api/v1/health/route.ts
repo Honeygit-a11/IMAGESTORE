@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { apiSuccess, handleApiError } from "@/lib/api/response";
 
 /**
@@ -6,7 +5,7 @@ import { apiSuccess, handleApiError } from "@/lib/api/response";
  * Demonstrates standard API response shape:
  * { data: { status, version, timestamp, service } }
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     return apiSuccess({
       status: "healthy",

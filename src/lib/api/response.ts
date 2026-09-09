@@ -23,12 +23,13 @@ export interface ApiSuccessPayload<T> {
     nextCursor?: string | null;
     limit?: number;
     total?: number;
+    [key: string]: unknown;
   };
 }
 
 export function apiSuccess<T>(
   data: T,
-  meta?: { nextCursor?: string | null; limit?: number; total?: number },
+  meta?: { nextCursor?: string | null; limit?: number; total?: number; [key: string]: unknown },
   status = 200
 ): NextResponse<ApiSuccessPayload<T>> {
   return NextResponse.json(

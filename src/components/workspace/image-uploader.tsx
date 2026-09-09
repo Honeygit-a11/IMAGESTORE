@@ -52,20 +52,28 @@ export function ImageUploader({
   const [tagInput, setTagInput] = React.useState("");
   const [isDragging, setIsDragging] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
-  const [isOffline, setIsOffline] = React.useState(false);
+  const isOffline = React.useSyncExternalStore(
+    (callback) => {
+      window.addEventListener("online", callback);
+      window.addEventListener("offline", callback);
+      return () => {
+        window.removeEventListener("online", callback);
+        window.removeEventListener("offline", callback);
+      };
+    },
+    () => !navigator.onLine,
+    () => false
+  );
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Offline status tracking
+  // Offline toast notifications
   React.useEffect(() => {
-    setIsOffline(!navigator.onLine);
     const handleOnline = () => {
-      setIsOffline(false);
       toast.success("Internet connection restored.");
     };
     const handleOffline = () => {
-      setIsOffline(true);
       toast.error("You are currently offline. Active uploads may be interrupted.");
     };
 

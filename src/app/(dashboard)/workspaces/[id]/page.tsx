@@ -2,27 +2,23 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   Crown,
   Edit3,
   Eye,
   Users,
-  HardDrive,
   Trash2,
   UploadCloud,
   Image as ImageIcon,
   Activity,
-  Tag,
   Loader2,
   AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ImageUploader } from "@/components/workspace/image-uploader";
 import { ImageGallery } from "@/components/gallery/image-gallery";
-import { toast } from "sonner";
 
 interface WorkspaceDetail {
   id: string;
@@ -41,7 +37,6 @@ interface WorkspaceDetail {
 
 export default function WorkspacePage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const [workspace, setWorkspace] = React.useState<WorkspaceDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);

@@ -2,16 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   Trash2,
   RotateCcw,
-  AlertTriangle,
   Loader2,
   Clock,
   HardDrive,
-  ImageIcon,
   ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +32,6 @@ interface TrashItem {
 
 export default function TrashPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
 
   const [items, setItems] = React.useState<TrashItem[]>([]);
   const [loading, setLoading] = React.useState(true);

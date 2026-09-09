@@ -68,6 +68,7 @@ export async function GET(
     return apiSuccess(formattedMembers, {
       total: memberCount,
       limit: maxMembers,
+      canInvite,
     });
   } catch (error) {
     return handleApiError(error);

@@ -5,7 +5,7 @@ import { HeroSection } from "@/components/landing/hero";
 import { BentoGrid } from "@/components/landing/bento-grid";
 import { StorageSimulator } from "@/components/landing/storage-simulator";
 import { RoleMatrix } from "@/components/landing/role-matrix";
-import { ArrowRight, Sparkles, Layers, ShieldCheck, HardDrive } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export default function HomePage() {
   return (

@@ -44,7 +44,6 @@ export function GalleryToolbar({
   selectedCount,
 }: GalleryToolbarProps) {
   const [tags, setTags] = React.useState<WorkspaceTag[]>([]);
-  const [loadingTags, setLoadingTags] = React.useState(true);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -57,8 +56,6 @@ export function GalleryToolbar({
         }
       } catch {
         // silent error
-      } finally {
-        if (isMounted) setLoadingTags(false);
       }
     }
 

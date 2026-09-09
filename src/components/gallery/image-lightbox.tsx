@@ -50,12 +50,18 @@ export function ImageLightbox({
 
   const currentImage = images[currentIndex];
 
+  const [prevImageId, setPrevImageId] = React.useState<string | null>(null);
+  if (currentImage && currentImage.id !== prevImageId) {
+    setPrevImageId(currentImage.id);
+    setLoadingHighRes(true);
+    setDownloadUrl(null);
+  }
+
   // Fetch full resolution download URL whenever currentImage changes
   React.useEffect(() => {
     if (!isOpen || !currentImage) return;
 
     let isMounted = true;
-    setLoadingHighRes(true);
 
     async function fetchFullImage() {
       try {

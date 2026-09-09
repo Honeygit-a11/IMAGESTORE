@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
-import { getCurrentUser, SESSION_COOKIE_NAME } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth/session";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 export async function GET(req: NextRequest) {

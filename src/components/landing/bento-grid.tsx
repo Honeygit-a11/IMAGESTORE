@@ -4,11 +4,7 @@ import {
   Tag,
   Trash2,
   FolderKanban,
-  FileCheck2,
-  ShieldCheck,
-  Zap,
   Lock,
-  Layers,
 } from "lucide-react";
 
 export function BentoGrid() {

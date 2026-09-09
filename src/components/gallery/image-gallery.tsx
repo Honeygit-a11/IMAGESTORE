@@ -41,9 +41,6 @@ export function ImageGallery({
   const fetchImages = React.useCallback(
     async (cursor?: string, append = false) => {
       try {
-        if (!append) setLoading(true);
-        else setLoadingMore(true);
-
         const params = new URLSearchParams({ limit: "20", sort });
         if (cursor) params.set("cursor", cursor);
         if (search.trim()) params.set("search", search.trim());
@@ -77,6 +74,7 @@ export function ImageGallery({
 
   const handleLoadMore = () => {
     if (nextCursor && !loadingMore) {
+      setLoadingMore(true);
       fetchImages(nextCursor, true);
     }
   };
@@ -101,11 +99,20 @@ export function ImageGallery({
       <GalleryToolbar
         workspaceId={workspaceId}
         search={search}
-        onSearchChange={(val) => setSearch(val)}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setLoading(true);
+        }}
         selectedTag={selectedTag}
-        onTagSelect={(t) => setSelectedTag(t)}
+        onTagSelect={(t) => {
+          setSelectedTag(t);
+          setLoading(true);
+        }}
         sort={sort}
-        onSortChange={(s) => setSort(s)}
+        onSortChange={(s) => {
+          setSort(s);
+          setLoading(true);
+        }}
         isMultiSelectMode={isMultiSelectMode}
         onToggleMultiSelect={() => {
           setIsMultiSelectMode((prev) => !prev);

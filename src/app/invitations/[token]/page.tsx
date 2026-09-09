@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
   FolderKanban,
-  Crown,
   Edit3,
   Eye,
   CheckCircle2,

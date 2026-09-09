@@ -7,10 +7,6 @@ import gsap from "gsap";
 import {
   Sparkles,
   ArrowRight,
-  ShieldCheck,
-  FolderKanban,
-  HardDrive,
-  Users,
   Search,
   Tag,
   Image as ImageIcon,

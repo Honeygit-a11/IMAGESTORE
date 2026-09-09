@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FolderKanban, HardDrive, User, LogOut, Plus } from "lucide-react";
+import { FolderKanban, HardDrive, User, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function DashboardLayout({

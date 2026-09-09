@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { HardDrive, AlertTriangle, CheckCircle2, Trash2, Database, ShieldAlert } from "lucide-react";
-import { ProgressBar } from "@/components/ui/progress-bar";
+import { HardDrive, AlertTriangle, Trash2, Database, ShieldAlert } from "lucide-react";
 
 export function StorageSimulator() {
   const [activeMb, setActiveMb] = React.useState(280);

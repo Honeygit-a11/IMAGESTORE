@@ -29,14 +29,25 @@ export function ConfirmationDialog({
 }: ConfirmationDialogProps) {
   const [inputValue, setInputValue] = React.useState("");
 
-  React.useEffect(() => {
-    if (!open) setInputValue("");
-  }, [open]);
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (!open) {
+      setInputValue("");
+    }
+  }
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setInputValue("");
+    }
+    onOpenChange(newOpen);
+  };
 
   const isConfirmed = matchTarget ? inputValue === matchTarget : true;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <div className="flex items-center gap-3 mb-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400">
           <AlertTriangle className="h-5 w-5" />

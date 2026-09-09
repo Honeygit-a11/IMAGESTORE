@@ -18,41 +18,44 @@ function VerifyEmailForm() {
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState(false);
 
+  const handleVerification = React.useCallback(
+    async (targetEmail: string, targetToken: string) => {
+      setError(null);
+      setLoading(true);
+
+      try {
+        const res = await fetch("/api/v1/auth/verify-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: targetEmail, token: targetToken }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error?.message || "Invalid or expired verification code.");
+          return;
+        }
+
+        setSuccess(true);
+        setTimeout(() => {
+          router.push("/login");
+        }, 2500);
+      } catch {
+        setError("Network error. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [router]
+  );
+
   // Auto-verify if both email and token are provided via link click
   React.useEffect(() => {
     if (initialEmail && initialToken) {
       handleVerification(initialEmail, initialToken);
     }
-  }, [initialEmail, initialToken]);
-
-  const handleVerification = async (targetEmail: string, targetToken: string) => {
-    setError(null);
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/v1/auth/verify-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: targetEmail, token: targetToken }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error?.message || "Invalid or expired verification code.");
-        return;
-      }
-
-      setSuccess(true);
-      setTimeout(() => {
-        router.push("/login");
-      }, 2500);
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [initialEmail, initialToken, handleVerification]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
