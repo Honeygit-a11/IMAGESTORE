@@ -1,0 +1,5 @@
+{
+  "project": "development",
+  "environment": "development",
+  "envFile": ".env"
+}

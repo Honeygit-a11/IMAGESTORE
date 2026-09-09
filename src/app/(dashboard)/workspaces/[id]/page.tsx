@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ImageUploader } from "@/components/workspace/image-uploader";
+import { ImageGallery } from "@/components/gallery/image-gallery";
 import { toast } from "sonner";
 
 interface WorkspaceDetail {
@@ -45,6 +46,7 @@ export default function WorkspacePage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isUploaderOpen, setIsUploaderOpen] = React.useState(false);
+  const [refreshToken, setRefreshToken] = React.useState(0);
 
   const fetchWorkspace = React.useCallback(async () => {
     if (!params.id) return;
@@ -155,19 +157,26 @@ export default function WorkspacePage() {
             </button>
           </Link>
 
-          {/* Trash Button (Only Owner has trash access) */}
-          {workspace.isOwner && (
+          {/* Activity Button */}
+          <Link href={`/workspaces/${workspace.id}/activity`}>
             <button
-              onClick={() =>
-                toast.info(
-                  `Phase 13: Trash bin has ${workspace.trashCount} soft-deleted items.`
-                )
-              }
               className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer shadow-2xs"
             >
-              <Trash2 className="h-3.5 w-3.5 text-amber-500" />
-              <span>Trash ({workspace.trashCount})</span>
+              <Activity className="h-3.5 w-3.5 text-blue-500" />
+              <span>Activity</span>
             </button>
+          </Link>
+
+          {/* Trash Button (Only Owner has trash access) */}
+          {workspace.isOwner && (
+            <Link href={`/workspaces/${workspace.id}/trash`}>
+              <button
+                className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer shadow-2xs"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-amber-500" />
+                <span>Trash ({workspace.trashCount})</span>
+              </button>
+            </Link>
           )}
 
           {/* Upload Button (Owner and Editor only) */}
@@ -215,7 +224,7 @@ export default function WorkspacePage() {
         </div>
       </div>
 
-      {/* Gallery Section / Empty Workspace State */}
+      {/* Gallery Section */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
@@ -227,25 +236,12 @@ export default function WorkspacePage() {
           </span>
         </div>
 
-        {workspace.imageCount === 0 ? (
-          <EmptyState
-            icon={<ImageIcon className="h-6 w-6" />}
-            title="Workspace is empty"
-            description="No images uploaded yet. Upload images (up to 10 MB per file, max 10 batch) directly to Cloudflare R2 object storage."
-            action={
-              workspace.role !== "VIEWER" ? (
-                <Button onClick={() => setIsUploaderOpen(true)}>
-                  <UploadCloud className="mr-1.5 h-4 w-4" />
-                  Upload First Image
-                </Button>
-              ) : undefined
-            }
-          />
-        ) : (
-          <div className="p-12 text-center text-xs text-zinc-400">
-            Gallery grid rendering in Phase 11.
-          </div>
-        )}
+        <ImageGallery
+          workspaceId={workspace.id}
+          role={workspace.role}
+          onOpenUploader={() => setIsUploaderOpen(true)}
+          refreshToken={refreshToken}
+        />
       </section>
 
       {/* Interactive Image Uploader Modal */}
@@ -255,6 +251,7 @@ export default function WorkspacePage() {
         onClose={() => setIsUploaderOpen(false)}
         onUploadSuccess={() => {
           fetchWorkspace();
+          setRefreshToken((r) => r + 1);
         }}
       />
     </div>
