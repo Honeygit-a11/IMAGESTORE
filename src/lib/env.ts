@@ -16,6 +16,7 @@ const envSchema = z.object({
   R2_BUCKET_NAME: z.string().optional().default("imagespace"),
   R2_PUBLIC_DOMAIN: z.string().optional().default(""),
   NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3000"),
+  CRON_SECRET: z.string().optional().default("dev-cron-secret-change-in-production"),
 });
 
 export const env = envSchema.parse({
@@ -34,4 +35,5 @@ export const env = envSchema.parse({
   R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
   R2_PUBLIC_DOMAIN: process.env.R2_PUBLIC_DOMAIN,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  CRON_SECRET: process.env.CRON_SECRET || "dev-cron-secret-change-in-production",
 });

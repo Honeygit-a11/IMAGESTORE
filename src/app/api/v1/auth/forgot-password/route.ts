@@ -3,6 +3,7 @@ import { z } from "zod";
 import prisma from "@/lib/db/prisma";
 import { generateVerificationCode } from "@/lib/auth/session";
 import { sendPasswordResetEmail } from "@/lib/email/mailer";
+import { applySlidingWindowRateLimit } from "@/lib/auth/rate-limit";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 const forgotSchema = z.object({
@@ -11,6 +12,21 @@ const forgotSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      req.headers.get("x-real-ip") ||
+      "127.0.0.1";
+
+    const rateLimit = applySlidingWindowRateLimit(`forgot_password:${ip}`, 3, 900); // 3 per 15 min
+    if (!rateLimit.success) {
+      return apiError(
+        "RATE_LIMIT_EXCEEDED",
+        `Too many password reset requests. Please wait ${rateLimit.resetSeconds} seconds before requesting another reset.`,
+        undefined,
+        429
+      );
+    }
+
     const body = await req.json();
     const { email } = forgotSchema.parse(body);
 

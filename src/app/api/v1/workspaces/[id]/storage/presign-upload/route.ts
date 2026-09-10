@@ -3,6 +3,7 @@ import { z } from "zod";
 import prisma from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { buildStorageKey, getPresignedUploadUrl } from "@/lib/storage/r2";
+import { applySlidingWindowRateLimit } from "@/lib/auth/rate-limit";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB per image limit
@@ -36,6 +37,17 @@ export async function POST(
     const user = await getCurrentUser(req);
     if (!user) {
       return apiError("UNAUTHORIZED", "Authentication required", undefined, 401);
+    }
+
+    // Rate limit: 30 upload requests per 60 seconds per user
+    const rateLimit = applySlidingWindowRateLimit(`upload_presign:${user.id}`, 30, 60);
+    if (!rateLimit.success) {
+      return apiError(
+        "RATE_LIMIT_EXCEEDED",
+        `Upload rate limit exceeded. Please wait ${rateLimit.resetSeconds} seconds before initiating more uploads.`,
+        undefined,
+        429
+      );
     }
 
     const { id } = await params;

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
+import { sendInAppNotification } from "@/lib/notifications/service";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 const updateRoleSchema = z.object({
@@ -87,6 +88,14 @@ export async function PATCH(
       },
     });
 
+    await sendInAppNotification({
+      userId: targetMember.userId,
+      type: "MEMBER_ROLE_CHANGED",
+      title: "Role Updated",
+      message: `Your role in the workspace was changed to ${role}.`,
+      link: `/workspaces/${id}`,
+    });
+
     return apiSuccess(updated);
   } catch (error) {
     return handleApiError(error);
@@ -167,6 +176,16 @@ export async function DELETE(
         },
       },
     });
+
+    if (!isSelf) {
+      await sendInAppNotification({
+        userId: targetMember.userId,
+        type: "MEMBER_REMOVED",
+        title: "Removed from Workspace",
+        message: `You were removed from a workspace by the owner.`,
+        link: "/dashboard",
+      });
+    }
 
     return apiSuccess({
       message: isSelf

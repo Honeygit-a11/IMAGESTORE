@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db/prisma";
+import { applySlidingWindowRateLimit } from "@/lib/auth/rate-limit";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 const verifySchema = z.object({
@@ -10,6 +11,21 @@ const verifySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      req.headers.get("x-real-ip") ||
+      "127.0.0.1";
+
+    const rateLimit = applySlidingWindowRateLimit(`verify_email:${ip}`, 10, 900); // 10 per 15 min
+    if (!rateLimit.success) {
+      return apiError(
+        "RATE_LIMIT_EXCEEDED",
+        `Too many verification attempts. Please wait ${rateLimit.resetSeconds} seconds before trying again.`,
+        undefined,
+        429
+      );
+    }
+
     const body = await req.json();
     const { email, token } = verifySchema.parse(body);
 

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
+import { sendInAppNotification } from "@/lib/notifications/service";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 const actionSchema = z.object({
@@ -121,6 +122,14 @@ export async function POST(
         },
       });
 
+      await sendInAppNotification({
+        userId: invitation.invitedById,
+        type: "INVITATION_DECLINED",
+        title: "Invitation Declined",
+        message: `${user.name || user.email} declined your invitation to "${invitation.workspace.name}".`,
+        link: `/workspaces/${invitation.workspaceId}/members`,
+      });
+
       return apiSuccess({ message: "Invitation declined." });
     }
 
@@ -179,6 +188,14 @@ export async function POST(
         },
       }),
     ]);
+
+    await sendInAppNotification({
+      userId: invitation.invitedById,
+      type: "INVITATION_ACCEPTED",
+      title: "Invitation Accepted",
+      message: `${user.name || user.email} accepted your invitation to "${invitation.workspace.name}".`,
+      link: `/workspaces/${invitation.workspaceId}/members`,
+    });
 
     return apiSuccess({
       workspaceId: invitation.workspaceId,

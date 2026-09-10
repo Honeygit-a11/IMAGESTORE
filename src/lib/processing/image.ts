@@ -14,13 +14,77 @@ export interface ImageMetadata {
 }
 
 /**
- * Validates image integrity using Sharp and extracts metadata.
+ * Inspects raw initial bytes for canonical image file signatures (magic bytes).
+ * Defends against polyglots and executable files disguised with image extensions.
+ */
+export function detectFileSignature(buffer: Buffer): {
+  isValid: boolean;
+  detectedFormat?: string;
+  error?: string;
+} {
+  if (!buffer || buffer.length < 12) {
+    return { isValid: false, error: "File payload is too small to be a valid image." };
+  }
+
+  // 1. JPEG: FF D8 FF
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return { isValid: true, detectedFormat: "jpeg" };
+  }
+
+  // 2. PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47 &&
+    buffer[4] === 0x0d &&
+    buffer[5] === 0x0a &&
+    buffer[6] === 0x1a &&
+    buffer[7] === 0x0a
+  ) {
+    return { isValid: true, detectedFormat: "png" };
+  }
+
+  // 3. GIF: 'GIF87a' or 'GIF89a'
+  const gifHeader = buffer.subarray(0, 6).toString("ascii");
+  if (gifHeader === "GIF87a" || gifHeader === "GIF89a") {
+    return { isValid: true, detectedFormat: "gif" };
+  }
+
+  // 4. WebP: 'RIFF' .... 'WEBP'
+  const riff = buffer.subarray(0, 4).toString("ascii");
+  const webp = buffer.subarray(8, 12).toString("ascii");
+  if (riff === "RIFF" && webp === "WEBP") {
+    return { isValid: true, detectedFormat: "webp" };
+  }
+
+  // 5. HEIC / HEIF / AVIF: 'ftyp' box at byte offset 4
+  const ftyp = buffer.subarray(4, 8).toString("ascii");
+  if (ftyp === "ftyp") {
+    return { isValid: true, detectedFormat: "heic" };
+  }
+
+  return {
+    isValid: false,
+    error: "File failed binary signature validation (unrecognized magic bytes).",
+  };
+}
+
+/**
+ * Validates image integrity using binary signatures and Sharp metadata extraction.
  * Guards against corrupted files and malicious non-image payloads.
  */
 export async function validateAndExtractMetadata(
   buffer: Buffer
 ): Promise<{ isValid: boolean; metadata?: ImageMetadata; error?: string }> {
   try {
+    // 1. First-line defense: Magic bytes verification
+    const sigCheck = detectFileSignature(buffer);
+    if (!sigCheck.isValid) {
+      return { isValid: false, error: sigCheck.error };
+    }
+
+    // 2. Second-line defense: Sharp decoding & structural verification
     const sharpInstance = sharp(buffer);
     const meta = await sharpInstance.metadata();
 

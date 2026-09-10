@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
+import { sendInAppNotification } from "@/lib/notifications/service";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 const transferSchema = z.object({
@@ -135,6 +136,14 @@ export async function POST(
         },
       }),
     ]);
+
+    await sendInAppNotification({
+      userId: newOwnerUserId,
+      type: "OWNERSHIP_TRANSFER_COMPLETED",
+      title: "Workspace Ownership Transferred",
+      message: `You are now the Owner of "${workspace.name}".`,
+      link: `/workspaces/${id}`,
+    });
 
     return apiSuccess({
       message: `Ownership of "${workspace.name}" successfully transferred to ${

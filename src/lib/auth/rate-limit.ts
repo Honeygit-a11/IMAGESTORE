@@ -89,3 +89,70 @@ export function recordFailedAttempt(key: string): {
 export function resetFailedAttempts(key: string): void {
   attemptsStore.delete(key);
 }
+
+interface SlidingBucket {
+  timestamps: number[];
+}
+
+const slidingBuckets = new Map<string, SlidingBucket>();
+
+// Periodic garbage collection every 10 minutes to prevent memory leaks
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    const maxRetention = 60 * 60 * 1000; // 1 hour
+    for (const [key, bucket] of slidingBuckets.entries()) {
+      bucket.timestamps = bucket.timestamps.filter((ts) => now - ts < maxRetention);
+      if (bucket.timestamps.length === 0) {
+        slidingBuckets.delete(key);
+      }
+    }
+  }, 10 * 60 * 1000);
+}
+
+/**
+ * Universal sliding-window rate limiter for sensitive API endpoints.
+ * @param key Unique client key (IP, user ID, or composite)
+ * @param maxRequests Maximum allowed requests within window
+ * @param windowSeconds Window duration in seconds
+ */
+export function applySlidingWindowRateLimit(
+  key: string,
+  maxRequests: number,
+  windowSeconds: number
+): {
+  success: boolean;
+  remaining: number;
+  resetSeconds: number;
+} {
+  const now = Date.now();
+  const windowMs = windowSeconds * 1000;
+  const cutoff = now - windowMs;
+
+  let bucket = slidingBuckets.get(key);
+  if (!bucket) {
+    bucket = { timestamps: [] };
+    slidingBuckets.set(key, bucket);
+  }
+
+  // Filter timestamps within current sliding window
+  bucket.timestamps = bucket.timestamps.filter((ts) => ts > cutoff);
+
+  if (bucket.timestamps.length >= maxRequests) {
+    const oldest = bucket.timestamps[0];
+    const resetSeconds = Math.max(1, Math.ceil((oldest + windowMs - now) / 1000));
+    return {
+      success: false,
+      remaining: 0,
+      resetSeconds,
+    };
+  }
+
+  bucket.timestamps.push(now);
+  return {
+    success: true,
+    remaining: maxRequests - bucket.timestamps.length,
+    resetSeconds: windowSeconds,
+  };
+}
+

@@ -3,6 +3,8 @@ import { z } from "zod";
 import prisma from "@/lib/db/prisma";
 import { getCurrentUser, generateSecureToken } from "@/lib/auth/session";
 import { sendWorkspaceInvitationEmail } from "@/lib/email/mailer";
+import { sendInAppNotification } from "@/lib/notifications/service";
+import { applySlidingWindowRateLimit } from "@/lib/auth/rate-limit";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 const inviteSchema = z.object({
@@ -86,6 +88,18 @@ export async function POST(
     }
 
     const { id } = await params;
+
+    // Rate limit: max 15 invitations per hour per user
+    const rateLimit = applySlidingWindowRateLimit(`invite:${user.id}`, 15, 3600);
+    if (!rateLimit.success) {
+      return apiError(
+        "RATE_LIMIT_EXCEEDED",
+        `Invitation quota exceeded. Please wait ${rateLimit.resetSeconds} seconds before sending more invitations.`,
+        undefined,
+        429
+      );
+    }
+
     const body = await req.json();
     const { email, role } = inviteSchema.parse(body);
 
@@ -192,6 +206,17 @@ export async function POST(
       user.name || user.email,
       token
     );
+
+    // If recipient is already a registered user, send in-app notification
+    if (existingUser) {
+      await sendInAppNotification({
+        userId: existingUser.id,
+        type: "INVITATION_RECEIVED",
+        title: "Workspace Invitation",
+        message: `${user.name || user.email} invited you to join "${workspace.name}" as ${role}.`,
+        link: `/invitations/${token}`,
+      });
+    }
 
     // Log action in ActivityLog
     await prisma.activityLog.create({

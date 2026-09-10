@@ -11,15 +11,48 @@ export async function GET(req: NextRequest) {
       return apiError("UNAUTHORIZED", "Not authenticated", undefined, 401);
     }
 
-    // Fetch workspace usage and counts
-    const [ownedCount, memberCount] = await Promise.all([
+    // Fetch workspace usage, counts, and per-workspace storage breakdown concurrently
+    const [ownedCount, memberCount, userWorkspaces] = await Promise.all([
       prisma.workspace.count({ where: { ownerId: user.id } }),
       prisma.workspaceMember.count({
         where: { userId: user.id, role: { not: "OWNER" } },
       }),
+      prisma.workspace.findMany({
+        where: {
+          OR: [
+            { ownerId: user.id },
+            { members: { some: { userId: user.id } } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          ownerId: true,
+          storageUsedBytes: true,
+          _count: {
+            select: {
+              images: {
+                where: { deletedAt: null },
+              },
+            },
+          },
+        },
+      }),
     ]);
 
     const totalWorkspaces = ownedCount + memberCount;
+
+    const workspacesBreakdown = userWorkspaces.map((ws) => {
+      const bytes = Number(ws.storageUsedBytes);
+      return {
+        id: ws.id,
+        name: ws.name,
+        role: ws.ownerId === user.id ? "OWNER" : "MEMBER",
+        storageUsedBytes: bytes,
+        storageUsedFormatted: `${(bytes / (1024 * 1024)).toFixed(1)} MB`,
+        imageCount: ws._count.images,
+      };
+    });
 
     return apiSuccess({
       user: {
@@ -42,6 +75,7 @@ export async function GET(req: NextRequest) {
             (Number(user.storageUsedBytes) / (500 * 1024 * 1024)) * 100
           )
         ),
+        workspaces: workspacesBreakdown,
       },
       workspaces: {
         currentCount: totalWorkspaces,

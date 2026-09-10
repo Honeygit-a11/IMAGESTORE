@@ -107,6 +107,39 @@ export function ImageLightbox({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, currentIndex, images.length, onNavigate, onClose]);
 
+  // Touch swipe navigation for mobile & tablet
+  const touchStartX = React.useRef<number | null>(null);
+  const touchEndX = React.useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const distance = touchStartX.current - touchEndX.current;
+    const minSwipeDistance = 50;
+
+    if (distance > minSwipeDistance) {
+      // Swiped left -> Next
+      if (currentIndex < images.length - 1) {
+        onNavigate(currentIndex + 1);
+      }
+    } else if (distance < -minSwipeDistance) {
+      // Swiped right -> Previous
+      if (currentIndex > 0) {
+        onNavigate(currentIndex - 1);
+      }
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
   if (!isOpen || !currentImage) return null;
 
   const formatBytes = (bytes: number) => {
@@ -221,7 +254,12 @@ export function ImageLightbox({
         </div>
 
         {/* Main Stage */}
-        <div className="relative w-full h-full flex items-center justify-center p-4 md:p-12 overflow-hidden">
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="relative w-full h-full flex items-center justify-center p-4 md:p-12 overflow-hidden touch-pan-y"
+        >
           {/* Navigation: Previous */}
           {currentIndex > 0 && (
             <button
@@ -268,7 +306,7 @@ export function ImageLightbox({
 
           {/* Metadata Sidebar / Info Overlay */}
           {showInfo && (
-            <div className="absolute right-4 bottom-4 md:bottom-auto md:top-20 z-20 w-80 max-h-[75vh] overflow-y-auto rounded-2xl bg-zinc-900/90 border border-white/10 p-5 text-zinc-200 shadow-2xl backdrop-blur-md space-y-4 animate-in fade-in duration-200">
+            <div className="absolute inset-x-4 bottom-4 md:inset-x-auto md:right-4 md:bottom-auto md:top-20 z-20 md:w-80 max-h-[60vh] md:max-h-[75vh] overflow-y-auto rounded-2xl bg-zinc-900/95 border border-white/10 p-5 text-zinc-200 shadow-2xl backdrop-blur-md space-y-4 animate-in fade-in duration-200">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                   Image Information

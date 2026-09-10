@@ -4,6 +4,7 @@ import prisma from "@/lib/db/prisma";
 import { hashPassword, validatePasswordStrength } from "@/lib/auth/password";
 import { generateVerificationCode } from "@/lib/auth/session";
 import { sendVerificationEmail } from "@/lib/email/mailer";
+import { applySlidingWindowRateLimit } from "@/lib/auth/rate-limit";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 const registerSchema = z.object({
@@ -14,6 +15,21 @@ const registerSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      req.headers.get("x-real-ip") ||
+      "127.0.0.1";
+
+    const rateLimit = applySlidingWindowRateLimit(`register:${ip}`, 5, 3600); // 5 per hour
+    if (!rateLimit.success) {
+      return apiError(
+        "RATE_LIMIT_EXCEEDED",
+        `Too many account creation attempts. Please wait ${rateLimit.resetSeconds} seconds before trying again.`,
+        undefined,
+        429
+      );
+    }
+
     const body = await req.json();
     const { name, email, password } = registerSchema.parse(body);
 

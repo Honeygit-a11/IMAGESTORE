@@ -58,6 +58,7 @@ model User {
   trashedImages      Image[]               @relation("DeletedByUser")
   activityLogs       ActivityLog[]
   sessions           UserSession[]
+  notifications      Notification[]
 
   @@index([email])
 }
@@ -227,3 +228,22 @@ model VerificationToken {
   @@index([identifier, type])
   @@index([token])
 }
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
