@@ -73,7 +73,7 @@ To allow direct client-side uploads (zero server bandwidth consumption), add thi
     "AllowedOrigins": [
       "https://imagespace.app",
       "https://*.imagespace.app",
-      "http://localhost:3000"
+      "http://localhost:3001"
     ],
     "AllowedMethods": [
       "GET",

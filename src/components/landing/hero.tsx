@@ -4,21 +4,152 @@ import * as React from "react";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import {
-  Sparkles,
-  ArrowRight,
-  Search,
-  Tag,
-  Image as ImageIcon,
-  CheckCircle2,
-} from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DriftWall from "@/components/DriftWall";
+import {
+  ParallaxCarousel,
+  type CarouselImageItem,
+} from "@/components/ui/parallax-carousel";
+import { TextScatter } from "@/components/ui/text-scatter";
+
+const carouselImages: CarouselImageItem[] = [
+  {
+    url: "https://images.unsplash.com/photo-1604537466158-719b1972feb8?w=900&q=80&auto=format&fit=crop",
+    title: "Minimalist Studio Form",
+    tag: "Studio",
+    size: "3.2 MB",
+    author: "Studio Alpha",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=900&q=80&auto=format&fit=crop",
+    title: "High-Frequency Circuitry",
+    tag: "Tech",
+    size: "4.8 MB",
+    author: "Hardware Lab",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=900&q=80&auto=format&fit=crop",
+    title: "Nordic Mist Valley",
+    tag: "Landscape",
+    size: "5.1 MB",
+    author: "Field Expedition",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1490604001847-b712b0c2f967?w=900&q=80&auto=format&fit=crop",
+    title: "Alpine Ridge Twilight",
+    tag: "Editorial",
+    size: "2.9 MB",
+    author: "Summit Bureau",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=900&q=80&auto=format&fit=crop",
+    title: "Glacial Iceform Monolith",
+    tag: "Nature",
+    size: "6.4 MB",
+    author: "Arctic Reserve",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=900&q=80&auto=format&fit=crop",
+    title: "Reflective Basin Vista",
+    tag: "Branding",
+    size: "3.7 MB",
+    author: "Horizon Media",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1511300636408-a63a89df3482?w=900&q=80&auto=format&fit=crop",
+    title: "Monochrome Curve",
+    tag: "Arch",
+    size: "4.2 MB",
+    author: "Atelier Forma",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=900&q=80&auto=format&fit=crop",
+    title: "Constellation Drift",
+    tag: "Space",
+    size: "7.1 MB",
+    author: "Deep Sky Co.",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=900&q=80&auto=format&fit=crop",
+    title: "Corporate Glass Monolith",
+    tag: "Urban",
+    size: "3.5 MB",
+    author: "Metropolis",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=80&auto=format&fit=crop",
+    title: "Azure Coastal Shore",
+    tag: "Ocean",
+    size: "4.4 MB",
+    author: "Coastline",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=900&q=80&auto=format&fit=crop",
+    title: "Lens Spectrum Flare",
+    tag: "Photo",
+    size: "5.8 MB",
+    author: "Prism Lab",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=900&q=80&auto=format&fit=crop",
+    title: "Studio Product Editorial",
+    tag: "Product",
+    size: "3.9 MB",
+    author: "Aesthetic Core",
+  },
+];
 
 const items = [
-  { image: 'https://picsum.photos/id/1015/600/400', title: 'Peaks', href: 'https://example.com/one' },
-  { image: 'https://picsum.photos/id/1025/600/400', title: 'Pup', href: 'https://example.com/two' },
-  { image: 'https://picsum.photos/id/1039/600/400', title: 'Falls', href: 'https://example.com/three' },
+  { image: "https://picsum.photos/id/10/600/400", title: "Forest Vista" },
+  { image: "https://picsum.photos/id/11/600/400", title: "Mountain Stream" },
+  { image: "https://picsum.photos/id/12/600/400", title: "Beach Horizon" },
+  { image: "https://picsum.photos/id/13/600/400", title: "Coastal Path" },
+  { image: "https://picsum.photos/id/14/600/400", title: "Ocean Cliff" },
+  { image: "https://picsum.photos/id/15/600/400", title: "Pine Grove" },
+  { image: "https://picsum.photos/id/16/600/400", title: "Lakeside" },
+  { image: "https://picsum.photos/id/17/600/400", title: "Trail Woods" },
+  { image: "https://picsum.photos/id/18/600/400", title: "Meadow Grass" },
+  { image: "https://picsum.photos/id/19/600/400", title: "River Crossing" },
+  { image: "https://picsum.photos/id/20/600/400", title: "Nordic Cabin" },
+  { image: "https://picsum.photos/id/25/600/400", title: "Morning Light" },
+  { image: "https://picsum.photos/id/28/600/400", title: "Timber Trees" },
+  { image: "https://picsum.photos/id/29/600/400", title: "Mountain Ridge" },
+  { image: "https://picsum.photos/id/36/600/400", title: "Highland Peak" },
+  { image: "https://picsum.photos/id/42/600/400", title: "Espresso Brew" },
+  { image: "https://picsum.photos/id/48/600/400", title: "Sunset Coast" },
+  { image: "https://picsum.photos/id/54/600/400", title: "Urban Skyline" },
+  { image: "https://picsum.photos/id/60/600/400", title: "Desk Workspace" },
+  { image: "https://picsum.photos/id/106/600/400", title: "Flower Petals" },
+  { image: "https://picsum.photos/id/110/600/400", title: "Forest Pathway" },
+  { image: "https://picsum.photos/id/119/600/400", title: "Macbook Studio" },
+  {
+    image: "https://picsum.photos/id/133/600/400",
+    title: "Vintage Automobile",
+  },
+  { image: "https://picsum.photos/id/164/600/400", title: "Boat Pier" },
+  { image: "https://picsum.photos/id/175/600/400", title: "Desert Dunes" },
+  { image: "https://picsum.photos/id/180/600/400", title: "Workspace Laptop" },
+  { image: "https://picsum.photos/id/192/600/400", title: "Valley Vista" },
+  { image: "https://picsum.photos/id/200/600/400", title: "Cow in Pasture" },
+  { image: "https://picsum.photos/id/211/600/400", title: "Ship Rigging" },
+  { image: "https://picsum.photos/id/219/600/400", title: "Red Brick Facade" },
+  { image: "https://picsum.photos/id/237/600/400", title: "Black Puppy" },
+  { image: "https://picsum.photos/id/244/600/400", title: "Pelican on Water" },
+  { image: "https://picsum.photos/id/250/600/400", title: "Camera Lens" },
+  { image: "https://picsum.photos/id/1015/600/400", title: "Mountain Peaks" },
+  { image: "https://picsum.photos/id/1025/600/400", title: "Wild Pup" },
+  { image: "https://picsum.photos/id/1039/600/400", title: "Cascading Falls" },
+  { image: "https://picsum.photos/id/1043/600/400", title: "Coastal Waves" },
+  { image: "https://picsum.photos/id/1050/600/400", title: "Lush Forest" },
+  { image: "https://picsum.photos/id/1062/600/400", title: "Foggy Ridge" },
+  { image: "https://picsum.photos/id/1069/600/400", title: "Alpine Lake" },
+  { image: "https://picsum.photos/id/1074/600/400", title: "Pine Canopy" },
+  {
+    image: "https://picsum.photos/id/1080/600/400",
+    title: "Strawberry Blossom",
+  },
+  { image: "https://picsum.photos/id/1084/600/400", title: "Walrus on Rocks" },
 ];
 
 export function HeroSection() {
@@ -72,7 +203,7 @@ export function HeroSection() {
             y: 25,
             duration: 0.8,
           },
-          "-=0.3"
+          "-=0.3",
         )
         .from(
           ".hero-desc",
@@ -81,7 +212,7 @@ export function HeroSection() {
             y: 20,
             duration: 0.7,
           },
-          "-=0.5"
+          "-=0.5",
         )
         .from(
           ".hero-cta",
@@ -90,27 +221,27 @@ export function HeroSection() {
             scale: 0.95,
             duration: 0.5,
           },
-          "-=0.4"
+          "-=0.4",
         )
         .from(
-          ".hero-mockup",
+          ".hero-carousel",
           {
             opacity: 0,
             y: 40,
             duration: 1,
           },
-          "-=0.3"
+          "-=0.3",
         );
     },
-    { scope: containerRef }
+    { scope: containerRef },
   );
 
   return (
     <div ref={containerRef} className="w-full">
       {/* Hero Section with Full-Width DriftWall Background */}
-      <section className="relative overflow-hidden pt-20 pb-28 md:pt-32 md:pb-40 text-center flex flex-col justify-center items-center min-h-[580px] md:min-h-[660px]">
+      <section className="relative overflow-hidden pt-20 pb-28 md:pt-32 md:pb-40 text-center flex flex-col justify-center items-center min-h-[590px] md:min-h-[670px]">
         {/* Layer 1: DriftWall Full-Width Background */}
-        <div className="absolute inset-0 w-full h-full overflow-hidden z-0 pointer-events-auto">
+        <div className="absolute inset-0 w-full h-full overflow-hidden z-0 pointer-events-none">
           <DriftWall
             items={items}
             columns={columns}
@@ -124,21 +255,19 @@ export function HeroSection() {
             speed={42}
             direction="up"
             variance={0.45}
-            parallax={0.6}
-            lift={64}
-            fade={0.6}
-            dim={0.55}
+            fade={0.2}
+            dim={0.9}
+            overlayOpacity={0.1}
             overlayColor="#060010"
             radius={14}
             roll={0}
-            pauseOnHover={false}
             grayscale={false}
           />
         </div>
 
-        {/* Layer 2: Dark Overlay for Readability */}
+        {/* Layer 2: Soft Overlay for Text Readability without Obscuring Background */}
         <div
-          className="hero-dark-overlay absolute inset-0 bg-white/45 dark:bg-[#060010]/75 backdrop-blur-[0.5px] pointer-events-none z-10"
+          className="hero-dark-overlay absolute inset-0 bg-white/20 dark:bg-[#060010]/45 backdrop-blur-[0.2px] pointer-events-none z-10"
           aria-hidden="true"
         />
 
@@ -148,31 +277,53 @@ export function HeroSection() {
         {/* Layer 3: Center Hero Content */}
         <div className="hero-center-content relative z-20 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Animated Badge */}
-          <div className="hero-badge inline-flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50/90 dark:bg-zinc-900/90 px-4 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 mb-8 backdrop-blur-md shadow-xs">
+          {/* <div className="hero-badge inline-flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50/90 dark:bg-zinc-900/90 px-4 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 mb-8 backdrop-blur-md shadow-xs">
             <Sparkles className="h-3.5 w-3.5 text-blue-500 animate-pulse" />
             <span>ImageSpace Engine · 500 MB Storage · 2 Workspaces</span>
-          </div>
+          </div> */}
 
-          {/* Headline */}
-          <h1 className="hero-title text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-zinc-900 dark:text-white max-w-4xl mx-auto leading-[1.08]">
-            Curate, collaborate, and store images with precision.
+          {/* Headline with Interactive Text Scatter */}
+          <h1 className="hero-title text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-white max-w-4xl mx-auto leading-[1.08] flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-4">
+            <TextScatter
+              text="Organize."
+              velocity={50}
+              rotation={28}
+              scale={1.16}
+              duration={0.45}
+              returnAfter={600}
+            />
+            <TextScatter
+              text="Collaborate."
+              velocity={50}
+              rotation={28}
+              scale={1.16}
+              duration={0.45}
+              returnAfter={600}
+            />
           </h1>
 
           {/* Subtitle */}
           <p className="hero-desc mt-6 text-lg sm:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto font-normal leading-relaxed">
-            The collaborative image storage platform for teams. Create up to 2 workspaces, organize with case-sensitive tags, manage 3-tier role permissions, and upload directly to Cloudflare R2.
+            Private workspaces, simple organization, seamless collaboration.
           </p>
 
           {/* Action CTAs */}
           <div className="hero-cta mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/register">
-              <Button size="lg" className="w-full sm:w-auto shadow-md hover:shadow-lg">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto shadow-md hover:shadow-lg"
+              >
                 Start Free Workspace
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
             <Link href="/login">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto border-zinc-300 dark:border-zinc-700 bg-white/90 dark:bg-zinc-900/90 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md shadow-xs"
+              >
                 Sign In to Workspaces
               </Button>
             </Link>
@@ -183,99 +334,46 @@ export function HeroSection() {
         <div className="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-white dark:from-zinc-950 to-transparent z-10 pointer-events-none" />
       </section>
 
-      {/* Dedicated Workspace Showcase Section */}
-      <section className="relative py-16 sm:py-24 border-t border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              Live Workspace Interface
-            </h2>
-            <p className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white mt-1.5">
-              Engineered for Clean Asset Organization
-            </p>
-            <p className="text-xs sm:text-sm text-zinc-500 mt-2">
-              Inspect tags, search files, manage team roles, and track 500 MB quota in real-time.
-            </p>
-          </div>
-
-          {/* Interactive Workspace Mockup Card */}
-          <div className="hero-mockup max-w-5xl mx-auto rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-zinc-900 p-4 sm:p-6 shadow-2xl backdrop-blur-xl text-left">
-            {/* Mockup Header Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center font-bold text-xs">
-                  IS
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                      Studio Alpha Workspace
-                    </h3>
-                    <span className="text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-2 py-0.5 rounded-full">
-                      OWNER
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400">3 of 3 Members · 128 MB used</p>
-                </div>
-              </div>
-
-              {/* Filter Bar in Mockup */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-800 px-2.5 py-1 text-xs bg-zinc-50 dark:bg-zinc-950 text-zinc-400">
-                  <Search className="h-3.5 w-3.5" />
-                  <span>Search by filename...</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                  <Tag className="h-3 w-3" />
-                  <span>Product (8)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Gallery Grid Preview in Mockup */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-5">
-              {[
-                { name: "hero-landscape.jpg", size: "3.8 MB", tag: "Landscape", color: "from-blue-500/20 to-indigo-500/30" },
-                { name: "product-editorial.png", size: "2.4 MB", tag: "Product", color: "from-purple-500/20 to-pink-500/30" },
-                { name: "brand-mockup-v2.webp", size: "1.9 MB", tag: "Branding", color: "from-emerald-500/20 to-teal-500/30" },
-                { name: "campaign-shoot.png", size: "4.1 MB", tag: "Campaign", color: "from-amber-500/20 to-orange-500/30" },
-              ].map((img, i) => (
-                <div
-                  key={i}
-                  className="group relative rounded-xl border border-zinc-200/70 dark:border-zinc-800 overflow-hidden bg-zinc-100 dark:bg-zinc-950 transition-all hover:shadow-md"
-                >
-                  <div
-                    className={`h-28 w-full bg-gradient-to-tr ${img.color} flex items-center justify-center`}
-                  >
-                    <ImageIcon className="h-8 w-8 text-zinc-400/80 group-hover:scale-110 transition-transform duration-300" />
-                  </div>
-                  <div className="p-2.5 bg-white dark:bg-zinc-900">
-                    <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 truncate">
-                      {img.name}
-                    </p>
-                    <div className="flex items-center justify-between text-[10px] text-zinc-400 mt-1">
-                      <span>{img.size}</span>
-                      <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-1.5 py-0.2 rounded font-medium">
-                        {img.tag}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Mockup Footer Stats */}
-            <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-zinc-500">
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Direct Cloudflare R2 Uploads Active
-                </span>
-                <span>· Max 10MB/image</span>
-              </div>
-              <span className="font-mono text-zinc-400">128 MB / 500 MB Quota</span>
-            </div>
-          </div>
+      {/* Interactive Parallax Carousel Showcase */}
+      <section className="hero-carousel relative py-14 sm:py-20 bg-zinc-50/60 dark:bg-zinc-950 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
+          {/* <h2 className="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            Interactive Visual Showcase
+          </h2> */}
+          <p className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white mt-1.5">
+            Explore your image workspace.
+          </p>
+          <p className="text-xs sm:text-sm text-zinc-500 mt-2 max-w-xl mx-auto">
+            Browse, organize, and discover team images with smooth interactions. Inspect team assets with silky-smooth parallax depth.
+          </p>
         </div>
+
+        {/* Parallax Carousel Track */}
+        <div className="w-full">
+          <ParallaxCarousel
+            images={carouselImages}
+            imageWidth={250}
+            imageHeight={330}
+            gap={14}
+            borderRadius={16}
+            parallaxIntensity={0.0}
+            uvScale={0.71}
+            lerp={0.05}
+            wheelSensitivity={0.8}
+            dragSensitivity={0.8}
+            loop={true}
+            autoplaySpeed={155}
+            pauseOnHover={true}
+            showProgress={false}
+          />
+        </div>
+
+        {/* <div className="text-center mt-6">
+          <span className="inline-flex items-center gap-2 text-xs text-zinc-400 bg-zinc-100/80 dark:bg-zinc-900/80 px-3.5 py-1.5 rounded-full border border-zinc-200/60 dark:border-zinc-800/60">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+            Drag or swipe horizontally · Autoplay pauses on hover
+          </span>
+        </div> */}
       </section>
     </div>
   );

@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const errorParam = searchParams.get("error");
 
   const storedState = req.cookies.get("oauth_state")?.value;
-  const baseUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
 
   if (errorParam || !code || !state || !storedState || state !== storedState) {
     const errorMsg = errorParam || "invalid_oauth_state";

@@ -15,7 +15,7 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().optional().default(""),
   R2_BUCKET_NAME: z.string().optional().default("imagespace"),
   R2_PUBLIC_DOMAIN: z.string().optional().default(""),
-  NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3000"),
+  NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3001"),
   CRON_SECRET: z.string().optional().default("dev-cron-secret-change-in-production"),
 });
 

@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Navbar } from "@/components/landing/navbar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MailCheck, CheckCircle2, AlertCircle, ArrowRight, Loader2, Key } from "lucide-react";
 
@@ -172,18 +173,10 @@ function VerifyEmailForm() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="min-h-screen flex flex-col justify-between p-6 bg-zinc-50/50 dark:bg-zinc-950">
-      <header className="flex items-center justify-between max-w-7xl mx-auto w-full">
-        <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-lg">
-          <span className="h-7 w-7 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center text-xs font-black">
-            IS
-          </span>
-          ImageSpace
-        </Link>
-        <ThemeToggle />
-      </header>
+    <div className="min-h-screen flex flex-col justify-between bg-zinc-50/50 dark:bg-zinc-950">
+      <Navbar />
 
-      <main className="mx-auto w-full max-w-md my-auto">
+      <main className="mx-auto w-full max-w-md my-auto px-4 py-8">
         <React.Suspense fallback={<div className="p-8 text-center text-sm text-zinc-400">Loading verification form...</div>}>
           <VerifyEmailForm />
         </React.Suspense>

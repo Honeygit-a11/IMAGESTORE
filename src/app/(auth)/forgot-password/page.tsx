@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { Navbar } from "@/components/landing/navbar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { KeyRound, Mail, Lock, CheckCircle2, AlertCircle, ArrowRight, Loader2, Key } from "lucide-react";
 
@@ -76,18 +77,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-6 bg-zinc-50/50 dark:bg-zinc-950">
-      <header className="flex items-center justify-between max-w-7xl mx-auto w-full">
-        <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-lg">
-          <span className="h-7 w-7 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center text-xs font-black">
-            IS
-          </span>
-          ImageSpace
-        </Link>
-        <ThemeToggle />
-      </header>
+    <div className="min-h-screen flex flex-col justify-between bg-zinc-50/50 dark:bg-zinc-950">
+      <Navbar />
 
-      <main className="mx-auto w-full max-w-md my-auto">
+      <main className="mx-auto w-full max-w-md my-auto px-4 py-8">
         <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 p-8 shadow-sm backdrop-blur-sm">
           <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300 mb-4 mx-auto">
             <KeyRound className="h-6 w-6" />

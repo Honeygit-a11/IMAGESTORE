@@ -21,7 +21,7 @@ export async function GET(_req: NextRequest) {
     }
 
     const state = generateSecureToken(16);
-    const baseUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
     const redirectUri = `${baseUrl}/api/v1/auth/callback/google`;
 
     const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -48,7 +48,7 @@ export async function GET(_req: NextRequest) {
     return response;
   } catch (error) {
     console.error("[Google OAuth Init Error]", error);
-    const baseUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
     return NextResponse.redirect(`${baseUrl}/login?error=oauth_init_failed`, 302);
   }
 }

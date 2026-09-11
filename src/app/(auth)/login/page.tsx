@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Navbar } from "@/components/landing/navbar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Lock, Mail, AlertCircle, ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 
@@ -81,18 +82,10 @@ function LoginForm() {
   const displayedError = error || oauthErrorMessage;
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-6 bg-zinc-50/50 dark:bg-zinc-950">
-      <header className="flex items-center justify-between max-w-7xl mx-auto w-full">
-        <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-lg">
-          <span className="h-7 w-7 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center text-xs font-black">
-            IS
-          </span>
-          ImageSpace
-        </Link>
-        <ThemeToggle />
-      </header>
+    <div className="min-h-screen flex flex-col justify-between bg-zinc-50/50 dark:bg-zinc-950">
+      <Navbar />
 
-      <main className="mx-auto w-full max-w-md my-auto">
+      <main className="mx-auto w-full max-w-md my-auto px-4 py-8">
         <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 p-8 shadow-sm backdrop-blur-sm">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
