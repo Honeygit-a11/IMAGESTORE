@@ -43,14 +43,11 @@ export function RoleMatrix() {
   const [activeRole, setActiveRole] = React.useState<RoleType>("OWNER");
 
   return (
-    <section id="roles" className="py-24 sm:py-28 lg:py-32 border-t border-zinc-200/60 dark:border-zinc-800/60">
+    <section id="roles" className="py-12 sm:py-14 lg:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="max-w-2xl">
-          <p className="text-xs font-medium tracking-wider uppercase text-blue-600 dark:text-blue-400">
-            Access Control
-          </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 mt-3 leading-[1.15]">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.15]">
             Simple roles. Clear control.
           </h2>
           <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-400 mt-4 leading-relaxed">

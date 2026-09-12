@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface CarouselImageItem {
@@ -387,31 +386,6 @@ export const ParallaxCarousel = React.forwardRef<
         )}
         style={{ cursor: "grab", ...style }}
       >
-        {/* Navigation Buttons */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            prev();
-          }}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-900/90 text-zinc-700 dark:text-zinc-200 backdrop-blur-md shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-white dark:hover:bg-zinc-800 cursor-pointer"
-          aria-label="Previous Slide"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            next();
-          }}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-900/90 text-zinc-700 dark:text-zinc-200 backdrop-blur-md shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-white dark:hover:bg-zinc-800 cursor-pointer"
-          aria-label="Next Slide"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-
         {/* Slides Track */}
         <div
           ref={trackRef}
