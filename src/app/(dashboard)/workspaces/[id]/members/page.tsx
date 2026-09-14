@@ -12,7 +12,6 @@ import {
   LogOut,
   ArrowRightLeft,
   UserPlus,
-  Loader2,
   Clock,
   Trash2,
   Mail,
@@ -21,7 +20,15 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { ListSkeleton } from "@/components/ui/skeleton-loaders";
+import { Stagger, MountReveal } from "@/components/ui/stagger";
 import { toast } from "sonner";
+
+const avatarGradient: Record<string, string> = {
+  OWNER: "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/20",
+  EDITOR: "bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md shadow-blue-500/20",
+  VIEWER: "bg-gradient-to-br from-zinc-400 to-zinc-500 text-white shadow-md shadow-zinc-500/20",
+};
 
 interface MemberItem {
   id: string;
@@ -242,9 +249,16 @@ export default function WorkspaceMembersPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
-        <p className="text-sm text-zinc-400">Loading workspace members and invitations...</p>
+      <div className="space-y-8 max-w-4xl animate-fade-in-up">
+        <div className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <div className="h-3 w-24 rounded bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse" />
+          <span>/</span>
+          <div className="h-3 w-32 rounded bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
+        </div>
+        <div className="pb-6 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="h-8 w-64 rounded-lg bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse" />
+        </div>
+        <ListSkeleton count={3} />
       </div>
     );
   }
@@ -258,23 +272,23 @@ export default function WorkspaceMembersPage() {
   return (
     <div className="space-y-8 max-w-4xl">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+      <MountReveal direction="left" className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
         <Link
           href={`/workspaces/${params.id}`}
-          className="hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 transition-colors"
+          className="hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 transition-colors hover:-translate-x-0.5"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           {workspaceName}
         </Link>
         <span>/</span>
         <span className="text-zinc-900 dark:text-zinc-100 font-bold">Members & Invitations</span>
-      </div>
+      </MountReveal>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
+      <MountReveal className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-zinc-50 dark:to-zinc-400 bg-clip-text text-transparent">
               Workspace Members
             </h1>
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-mono">
@@ -312,7 +326,7 @@ export default function WorkspaceMembersPage() {
             </Button>
           )}
         </div>
-      </div>
+      </MountReveal>
 
       {/* Active Members Section */}
       <section className="space-y-3">
@@ -321,14 +335,15 @@ export default function WorkspaceMembersPage() {
         </h2>
 
         <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 divide-y divide-zinc-100 dark:divide-zinc-800/80 shadow-sm overflow-hidden">
+          <Stagger stagger={0.06} direction="up">
           {members.map((member) => (
             <div
               key={member.id}
-              className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors hover:bg-zinc-50/60 dark:hover:bg-zinc-800/20 border-l-2 border-l-transparent hover:border-l-blue-500"
             >
               {/* User Details */}
               <div className="flex items-center gap-3.5">
-                <div className="h-10 w-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-xs text-zinc-700 dark:text-zinc-300 shrink-0">
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${avatarGradient[member.role] || "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"}`}>
                   {member.name.substring(0, 2).toUpperCase()}
                 </div>
                 <div>
@@ -403,6 +418,7 @@ export default function WorkspaceMembersPage() {
               </div>
             </div>
           ))}
+          </Stagger>
         </div>
       </section>
 
@@ -414,14 +430,14 @@ export default function WorkspaceMembersPage() {
             Pending Invitations ({invitations.length})
           </h2>
 
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 divide-y divide-zinc-100 dark:divide-zinc-800/80 shadow-sm overflow-hidden">
+          <div className="rounded-2xl border border-amber-200/60 dark:border-amber-900/40 bg-white dark:bg-zinc-900/60 divide-y divide-zinc-100 dark:divide-zinc-800/80 shadow-sm overflow-hidden border-l-4 border-l-amber-400">
             {invitations.map((inv) => (
               <div
                 key={inv.id}
-                className="p-4 sm:p-5 flex items-center justify-between gap-4"
+                className="p-4 sm:p-5 flex items-center justify-between gap-4 transition-colors hover:bg-amber-50/40 dark:hover:bg-amber-950/10"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center text-amber-600 shrink-0">
+                  <div className="h-9 w-9 rounded-full bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center text-amber-600 shrink-0 animate-float">
                     <Mail className="h-4 w-4" />
                   </div>
                   <div>
@@ -485,10 +501,10 @@ export default function WorkspaceMembersPage() {
             </label>
             <div className="grid grid-cols-2 gap-3">
               <label
-                className={`p-3 rounded-xl border flex flex-col cursor-pointer transition-all ${
+                className={`p-3 rounded-xl border flex flex-col cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
                   inviteRole === "EDITOR"
-                    ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100"
-                    : "border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400"
+                    ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100 scale-[1.02] shadow-md shadow-blue-500/10"
+                    : "border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
                 }`}
               >
                 <input
@@ -509,10 +525,10 @@ export default function WorkspaceMembersPage() {
               </label>
 
               <label
-                className={`p-3 rounded-xl border flex flex-col cursor-pointer transition-all ${
+                className={`p-3 rounded-xl border flex flex-col cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
                   inviteRole === "VIEWER"
-                    ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100"
-                    : "border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400"
+                    ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100 scale-[1.02] shadow-md shadow-blue-500/10"
+                    : "border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
                 }`}
               >
                 <input

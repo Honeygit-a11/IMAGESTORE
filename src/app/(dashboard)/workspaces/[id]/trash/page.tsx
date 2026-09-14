@@ -15,7 +15,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { GridSkeleton } from "@/components/ui/skeleton-loaders";
+import { Stagger, MountReveal } from "@/components/ui/stagger";
 import { toast } from "sonner";
+
+const typeBadgeColor: Record<string, string> = {
+  "image/jpeg": "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+  "image/png": "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+  "image/webp": "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  "image/gif": "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
+  "image/svg+xml": "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+};
 
 interface TrashItem {
   id: string;
@@ -146,9 +156,16 @@ export default function TrashPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
-        <p className="text-sm text-zinc-400">Loading Trash items...</p>
+      <div className="space-y-8 animate-fade-in-up">
+        <div className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <div className="h-3 w-20 rounded bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse" />
+          <span>/</span>
+          <div className="h-3 w-16 rounded bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
+        </div>
+        <div className="pb-6 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="h-9 w-52 rounded-lg bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse" />
+        </div>
+        <GridSkeleton count={3} />
       </div>
     );
   }
@@ -174,26 +191,26 @@ export default function TrashPage() {
   return (
     <div className="space-y-8">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+      <MountReveal direction="left" className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
         <Link
           href={`/workspaces/${params.id}`}
-          className="hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 transition-colors"
+          className="hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 transition-colors hover:-translate-x-0.5"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Workspace
         </Link>
         <span>/</span>
         <span className="text-zinc-900 dark:text-zinc-100 font-bold">Trash Bin</span>
-      </div>
+      </MountReveal>
 
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
+      <MountReveal className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20">
               <Trash2 className="h-5 w-5" />
             </div>
-            <h1 className="text-2xl font-extrabold text-zinc-900 dark:text-zinc-100">
+            <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-zinc-50 dark:to-zinc-400 bg-clip-text text-transparent">
               Trash Bin ({items.length})
             </h1>
           </div>
@@ -215,12 +232,12 @@ export default function TrashPage() {
             Empty Trash ({items.length})
           </Button>
         )}
-      </div>
+      </MountReveal>
 
       {/* Content Body */}
       {items.length === 0 ? (
         <EmptyState
-          icon={<Trash2 className="h-6 w-6 text-zinc-400" />}
+          icon={<Trash2 className="h-6 w-6 text-zinc-400 animate-float" />}
           title="Trash is empty"
           description="There are no soft-deleted images in this workspace. Deleted assets will appear here for 30 days before permanent purging."
           action={
@@ -233,18 +250,32 @@ export default function TrashPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.map((item) => (
+        <Stagger stagger={0.07} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((item) => {
+            const urgent = item.daysRemaining <= 7;
+            const critical = item.daysRemaining <= 3;
+            const typeClass =
+              typeBadgeColor[item.fileType] || "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
+            return (
             <div
               key={item.id}
-              className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 flex flex-col justify-between gap-3 shadow-2xs"
+              className={`group relative overflow-hidden p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 flex flex-col justify-between gap-3 shadow-2xs hover:shadow-md hover:border-amber-300/50 dark:hover:border-amber-700/50 hover:-translate-y-0.5 transition-all duration-200 ${
+                critical ? "animate-pulse" : ""
+              }`}
             >
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500 to-orange-500 opacity-70" />
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate" title={item.fileName}>
                     {item.fileName}
                   </h4>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 shrink-0">
+                  <span
+                    className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                      urgent
+                        ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                    }`}
+                  >
                     <Clock className="h-2.5 w-2.5" />
                     {item.daysRemaining}d left
                   </span>
@@ -256,7 +287,9 @@ export default function TrashPage() {
                     {formatBytes(item.fileSize)}
                   </span>
                   <span>·</span>
-                  <span className="uppercase">{item.fileType.split("/")[1] || "IMAGE"}</span>
+                  <span className={`uppercase px-1.5 py-0.5 rounded ${typeClass}`}>
+                    {item.fileType.split("/")[1] || "IMAGE"}
+                  </span>
                 </div>
 
                 {item.deletedAt && (
@@ -274,7 +307,7 @@ export default function TrashPage() {
                   size="sm"
                   onClick={() => handleRestore(item.id, item.fileName)}
                   disabled={restoringId === item.id}
-                  className="text-xs h-8 flex-1"
+                  className="text-xs h-8 flex-1 hover:from-emerald-50 hover:to-emerald-100 dark:hover:from-emerald-950/40 dark:hover:to-emerald-900/40"
                 >
                   {restoringId === item.id ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
@@ -296,8 +329,9 @@ export default function TrashPage() {
                 </Button>
               </div>
             </div>
-          ))}
-        </div>
+            );
+          })}
+        </Stagger>
       )}
 
       {/* Confirmation: Empty Trash */}

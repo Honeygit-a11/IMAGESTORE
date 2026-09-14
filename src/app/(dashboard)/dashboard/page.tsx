@@ -15,7 +15,6 @@ import {
   Crown,
   Edit3,
   Eye,
-  Loader2,
   Clock,
   MailCheck,
   Check,
@@ -26,8 +25,10 @@ import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
-import { ProgressBar } from "@/components/ui/progress-bar";
 import { EmptyState } from "@/components/ui/empty-state";
+import { StatTile } from "@/components/ui/stat-tile";
+import { StatGridSkeleton } from "@/components/ui/skeleton-loaders";
+import { Stagger, MountReveal } from "@/components/ui/stagger";
 import { toast } from "sonner";
 
 interface WorkspaceItem {
@@ -80,12 +81,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = React.useState(true);
   const [inviteActionLoading, setInviteActionLoading] = React.useState(false);
 
-  // Create Workspace Modal State
   const [createOpen, setCreateOpen] = React.useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = React.useState("");
   const [createLoading, setCreateLoading] = React.useState(false);
 
-  // Deletion Confirmation Dialog State
   const [deleteTarget, setDeleteTarget] = React.useState<WorkspaceItem | null>(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
 
@@ -210,9 +209,28 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
-        <p className="text-sm text-zinc-400">Loading your workspaces and storage metrics...</p>
+      <div className="space-y-8 animate-fade-in-up">
+        <div>
+          <div className="h-8 w-48 rounded-lg bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse" />
+          <div className="mt-2 h-4 w-96 max-w-full rounded bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
+        </div>
+        <StatGridSkeleton count={3} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-zinc-200 p-6 dark:border-zinc-800"
+            >
+              <div className="h-5 w-1/3 rounded bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse" />
+              <div className="mt-3 h-4 w-1/2 rounded bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
+              <div className="mt-5 grid grid-cols-3 gap-2.5">
+                {Array.from({ length: 3 }).map((_, j) => (
+                  <div key={j} className="h-14 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -223,13 +241,13 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Top Header & Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
+      <MountReveal className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-zinc-100 dark:to-zinc-400 bg-clip-text text-transparent">
               Workspaces
             </h1>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-mono">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 text-blue-600 dark:text-blue-400 font-mono border border-blue-200/60 dark:border-blue-800/50">
               {workspaceCount} / 2
             </span>
           </div>
@@ -241,24 +259,24 @@ export default function DashboardPage() {
         <Button
           onClick={() => setCreateOpen(true)}
           disabled={!canCreateWorkspace}
-          className="self-start sm:self-auto shadow-sm"
+          className="self-start sm:self-auto shadow-md hover:shadow-lg transition-shadow"
           title={!canCreateWorkspace ? "Maximum limit of 2 workspaces reached" : undefined}
         >
           <Plus className="mr-1.5 h-4 w-4" />
           Create Workspace
         </Button>
-      </div>
+      </MountReveal>
 
-      {/* Pending Invitations Banner (In-App notification) */}
+      {/* Pending Invitations Banner */}
       {pendingInvites.length > 0 && (
         <div className="space-y-3">
           {pendingInvites.map((inv) => (
             <div
               key={inv.id}
-              className="p-4 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm"
+              className="animate-fade-in-down p-4 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 border-l-4 border-l-blue-500 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm"
             >
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center shrink-0 animate-float">
                   <MailCheck className="h-5 w-5" />
                 </div>
                 <div>
@@ -302,68 +320,45 @@ export default function DashboardPage() {
       )}
 
       {/* Storage & Capacity Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Workspace Limit Card */}
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            <span className="flex items-center gap-1.5">
-              <FolderKanban className="h-4 w-4 text-blue-500" />
-              Workspace Limit
-            </span>
+      <Stagger stagger={0.1} className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <StatTile
+          label="Workspace Limit"
+          value={workspaceCount}
+          suffix=" / 2 max"
+          icon={<FolderKanban className="h-4 w-4" />}
+          accent="blue"
+          valueClassName="text-3xl"
+          headerRight={
             <span className={canCreateWorkspace ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-amber-500 font-bold"}>
               {canCreateWorkspace ? "Available" : "Limit Reached"}
             </span>
-          </div>
-          <div className="text-3xl font-extrabold text-zinc-900 dark:text-zinc-100">
-            {workspaceCount} <span className="text-sm font-normal text-zinc-400">/ 2 max</span>
-          </div>
-          <p className="text-xs text-zinc-500 mt-2">
-            Each user can participate in up to 2 workspaces total.
-          </p>
-        </div>
-
-        {/* 500 MB Storage Quota Card */}
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            <span className="flex items-center gap-1.5">
-              <HardDrive className="h-4 w-4 text-emerald-500" />
-              Total Storage
-            </span>
-            <span className="font-mono text-zinc-500">
-              {userMe?.storage.percentUsed || 0}%
-            </span>
-          </div>
-          <div className="text-3xl font-extrabold text-zinc-900 dark:text-zinc-100">
-            {userMe?.storage.usedFormatted || "0 MB"}{" "}
-            <span className="text-sm font-normal text-zinc-400">/ 500 MB</span>
-          </div>
-          <ProgressBar
-            value={userMe?.storage.usedBytes || 0}
-            max={userMe?.storage.maxBytes || 524288000}
-            showPercent={false}
-            className="mt-3"
-          />
-        </div>
-
-        {/* Team Capacity Rules */}
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-5 shadow-sm">
-          <div className="flex items-center gap-1.5 mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            <Users className="h-4 w-4 text-purple-500" />
-            Member Cap
-          </div>
-          <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-            3 Members / Workspace
-          </div>
-          <p className="text-xs text-zinc-500 mt-2">
-            Owner + 2 collaborators (Editor or Viewer roles) per workspace.
-          </p>
-        </div>
-      </div>
+          }
+        />
+        <StatTile
+          label="Total Storage"
+          display={`${userMe?.storage.usedFormatted ?? "0 MB"} / 500 MB`}
+          icon={<HardDrive className="h-4 w-4" />}
+          accent="green"
+          valueClassName="text-3xl"
+          progress={{
+            value: userMe?.storage.usedBytes ?? 0,
+            max: userMe?.storage.maxBytes ?? 524288000,
+          }}
+        />
+        <StatTile
+          label="Member Cap"
+          value={3}
+          suffix=" / Workspace"
+          icon={<Users className="h-4 w-4" />}
+          accent="purple"
+          valueClassName="text-3xl"
+        />
+      </Stagger>
 
       {/* Workspaces Grid / Empty State */}
       {workspaces.length === 0 ? (
         <EmptyState
-          icon={<FolderKanban className="h-6 w-6" />}
+          icon={<FolderKanban className="h-6 w-6 animate-float" />}
           title="No workspaces yet"
           description="Create your first workspace to upload images, invite team members, and manage permissions."
           action={
@@ -374,14 +369,14 @@ export default function DashboardPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Stagger stagger={0.08} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {workspaces.map((ws) => (
             <div
               key={ws.id}
-              className="group relative rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+              className="group relative rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between overflow-hidden"
             >
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-blue-500/0 to-transparent transition-all duration-300 group-hover:via-blue-500/60" />
               <div>
-                {/* Header: Name, Role Badge, Menu */}
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <div className="flex items-center gap-2">
@@ -395,9 +390,9 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <span
-                        className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                        className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full transition-shadow ${
                           ws.role === "OWNER"
-                            ? "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300"
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)]"
                             : ws.role === "EDITOR"
                             ? "bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300"
                             : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
@@ -414,7 +409,6 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Actions Dropdown for Owner */}
                   {ws.isOwner && (
                     <Dropdown
                       trigger={
@@ -439,7 +433,7 @@ export default function DashboardPage() {
 
                 {/* Metrics Pill Grid */}
                 <div className="grid grid-cols-3 gap-2.5 py-4 border-y border-zinc-100 dark:border-zinc-800/80 text-xs">
-                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40">
+                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 transition-colors hover:bg-blue-50/60 dark:hover:bg-blue-950/30">
                     <div className="flex items-center gap-1 text-zinc-400 mb-1">
                       <Users className="h-3.5 w-3.5" />
                       <span>Members</span>
@@ -449,7 +443,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40">
+                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 transition-colors hover:bg-emerald-50/60 dark:hover:bg-emerald-950/30">
                     <div className="flex items-center gap-1 text-zinc-400 mb-1">
                       <ImageIcon className="h-3.5 w-3.5" />
                       <span>Images</span>
@@ -459,7 +453,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40">
+                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 transition-colors hover:bg-purple-50/60 dark:hover:bg-purple-950/30">
                     <div className="flex items-center gap-1 text-zinc-400 mb-1">
                       <HardDrive className="h-3.5 w-3.5" />
                       <span>Storage</span>
@@ -471,7 +465,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Card Footer */}
               <div className="mt-4 flex items-center justify-between text-xs text-zinc-400">
                 <span className="flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5" />
@@ -486,7 +479,7 @@ export default function DashboardPage() {
               </div>
             </div>
           ))}
-        </div>
+        </Stagger>
       )}
 
       {/* Create Workspace Modal */}
@@ -537,7 +530,6 @@ export default function DashboardPage() {
         </form>
       </Dialog>
 
-      {/* GitHub-Style Destructive Deletion Confirmation Dialog */}
       {deleteTarget && (
         <ConfirmationDialog
           open={!!deleteTarget}

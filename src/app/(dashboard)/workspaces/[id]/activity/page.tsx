@@ -21,7 +21,27 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { TimelineSkeleton } from "@/components/ui/skeleton-loaders";
+import { Stagger, MountReveal } from "@/components/ui/stagger";
 import { toast } from "sonner";
+
+const dotColorMap: Record<string, string> = {
+  IMAGE_UPLOADED: "bg-blue-500",
+  IMAGE_DELETED: "bg-amber-500",
+  IMAGE_RESTORED: "bg-emerald-500",
+  IMAGE_PERMANENTLY_DELETED: "bg-red-500",
+  TRASH_EMPTIED: "bg-red-500",
+  MEMBER_INVITED: "bg-purple-500",
+  MEMBER_JOINED: "bg-emerald-500",
+  INVITATION_ACCEPTED: "bg-emerald-500",
+  MEMBER_REMOVED: "bg-red-500",
+  MEMBER_LEFT: "bg-red-500",
+  ROLE_CHANGED: "bg-amber-500",
+  OWNERSHIP_TRANSFERRED: "bg-amber-500",
+  TAG_ADDED: "bg-indigo-500",
+  TAG_REMOVED: "bg-indigo-500",
+  WORKSPACE_CREATED: "bg-amber-500",
+};
 
 interface ActivityItem {
   id: string;
@@ -221,26 +241,26 @@ export default function WorkspaceActivityPage() {
   return (
     <div className="space-y-8">
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+      <MountReveal direction="left" className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
         <Link
           href={`/workspaces/${params.id}`}
-          className="hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 transition-colors"
+          className="hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 transition-colors hover:-translate-x-0.5"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Workspace
         </Link>
         <span>/</span>
         <span className="text-zinc-900 dark:text-zinc-100 font-bold">Activity Log</span>
-      </div>
+      </MountReveal>
 
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
+      <MountReveal className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-md shadow-blue-500/20">
               <Activity className="h-5 w-5" />
             </div>
-            <h1 className="text-2xl font-extrabold text-zinc-900 dark:text-zinc-100">
+            <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-zinc-50 dark:to-zinc-400 bg-clip-text text-transparent">
               Workspace Activity
             </h1>
           </div>
@@ -255,9 +275,9 @@ export default function WorkspaceActivityPage() {
             <button
               key={cat}
               onClick={() => setCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg font-semibold capitalize transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg font-semibold capitalize transition-all duration-200 cursor-pointer ${
                 category === cat
-                  ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-2xs"
+                  ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm"
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
               }`}
             >
@@ -265,31 +285,32 @@ export default function WorkspaceActivityPage() {
             </button>
           ))}
         </div>
-      </div>
+      </MountReveal>
 
       {/* Content Stream */}
       {loading && logs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
-          <Loader2 className="h-7 w-7 animate-spin text-zinc-500" />
-          <p className="text-xs text-zinc-400">Loading activity timeline...</p>
-        </div>
+        <TimelineSkeleton count={5} />
       ) : logs.length === 0 ? (
         <EmptyState
-          icon={<Activity className="h-6 w-6 text-zinc-400" />}
+          icon={<Activity className="h-6 w-6 text-zinc-400 animate-float" />}
           title="No activity recorded"
           description="Actions performed in this workspace will automatically appear here on the audit timeline."
         />
       ) : (
-        <div className="space-y-3">
+        <div className="timeline-line space-y-3 pl-0">
+          <Stagger stagger={0.05} direction="left" className="space-y-3">
           {logs.map((log) => {
             const badge = getActionBadge(log.action);
+            const dotColor = dotColorMap[log.action] || "bg-zinc-400";
             return (
               <div
                 key={log.id}
-                className="flex items-start gap-3.5 p-3.5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 shadow-2xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
+                className="relative pl-12 flex items-start gap-3.5 p-3.5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 shadow-2xs hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-600 hover:-translate-y-px transition-all duration-200 group"
               >
+                {/* Timeline dot */}
+                <span className={`absolute left-[10px] top-5 h-2.5 w-2.5 rounded-full ${dotColor} ring-4 ring-white dark:ring-zinc-900`} />
                 {/* Event Icon */}
-                <div className={`p-2.5 rounded-xl shrink-0 ${badge.color}`}>
+                <div className={`p-2.5 rounded-xl shrink-0 ${badge.color} transition-transform duration-200 group-hover:scale-110`}>
                   {badge.icon}
                 </div>
 
@@ -332,6 +353,7 @@ export default function WorkspaceActivityPage() {
               </div>
             );
           })}
+          </Stagger>
 
           {/* Load More Pagination */}
           {nextCursor && (
