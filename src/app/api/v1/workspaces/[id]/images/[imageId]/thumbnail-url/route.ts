@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getPresignedDownloadUrl } from "@/lib/storage/r2";
+import { getCloudinaryThumbnailUrl } from "@/lib/storage/cloudinary";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 /**
@@ -59,7 +59,7 @@ export async function GET(
     const targetKey = image.thumbnailKey || image.storageKey;
     const isThumbnail = Boolean(image.thumbnailKey);
 
-    const signedUrl = await getPresignedDownloadUrl({
+    const signedUrl = await getCloudinaryThumbnailUrl({
       storageKey: targetKey,
       expiresInSeconds: 3600, // 1 hour
     });

@@ -4,7 +4,7 @@ import {
   getObjectBuffer,
   putObjectBuffer,
   buildStorageKey,
-} from "@/lib/storage/r2";
+} from "@/lib/storage/cloudinary";
 
 export interface ImageMetadata {
   width?: number;

@@ -1,5 +1,5 @@
 import prisma from "@/lib/db/prisma";
-import { deleteR2Object } from "@/lib/storage/r2";
+import { deleteCloudinaryObject as deleteR2Object } from "@/lib/storage/cloudinary";
 
 export interface MaintenanceRunResult {
   failedUploadsCleaned: number;

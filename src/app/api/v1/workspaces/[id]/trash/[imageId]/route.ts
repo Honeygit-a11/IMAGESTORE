@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
-import { deleteR2Object } from "@/lib/storage/r2";
+import { deleteCloudinaryObject as deleteR2Object } from "@/lib/storage/cloudinary";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 /**

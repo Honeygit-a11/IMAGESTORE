@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getPresignedDownloadUrl } from "@/lib/storage/r2";
+import { getCloudinaryDownloadUrl } from "@/lib/storage/cloudinary";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 /**
@@ -58,8 +58,10 @@ export async function GET(
     }
 
     // Generate secure temporary download URL (valid for 1 hour)
-    const downloadUrl = await getPresignedDownloadUrl({
+    const downloadUrl = await getCloudinaryDownloadUrl({
       storageKey: image.storageKey,
+      fileName: image.fileName,
+      isDownload: true,
       expiresInSeconds: 3600,
     });
 

@@ -32,6 +32,8 @@ interface FileUploadItem {
   imageId?: string;
   storageKey?: string;
   uploadUrl?: string;
+  uploadMethod?: "POST" | "PUT";
+  uploadFields?: Record<string, string>;
 }
 
 interface ImageUploaderProps {
@@ -217,18 +219,30 @@ export function ImageUploader({
 
         imageId = presignData.data.imageId;
         item.uploadUrl = presignData.data.uploadUrl;
+        item.uploadMethod = presignData.data.uploadMethod || "PUT";
+        item.uploadFields = presignData.data.uploadFields;
         item.imageId = imageId;
 
         setItems((prev) =>
-          prev.map((i) => (i.id === item.id ? { ...i, imageId, uploadUrl: presignData.data.uploadUrl } : i))
+          prev.map((i) =>
+            i.id === item.id
+              ? {
+                  ...i,
+                  imageId,
+                  uploadUrl: presignData.data.uploadUrl,
+                  uploadMethod: presignData.data.uploadMethod || "PUT",
+                  uploadFields: presignData.data.uploadFields,
+                }
+              : i
+          )
         );
       }
 
-      // Step B: Upload directly to R2 using XMLHttpRequest to monitor progress
+      // Step B: Upload directly to cloud storage using XMLHttpRequest to monitor progress
       const uploadSuccess = await new Promise<boolean>((resolve) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("PUT", item.uploadUrl!);
-        xhr.setRequestHeader("Content-Type", item.file.type || "application/octet-stream");
+        const method = item.uploadMethod || (item.uploadFields ? "POST" : "PUT");
+        xhr.open(method, item.uploadUrl!);
 
         xhr.upload.onprogress = (evt) => {
           if (evt.lengthComputable) {
@@ -250,7 +264,19 @@ export function ImageUploader({
         xhr.onerror = () => resolve(false);
         xhr.ontimeout = () => resolve(false);
 
-        xhr.send(item.file);
+        if (item.uploadFields && Object.keys(item.uploadFields).length > 0) {
+          // Cloudinary Direct Signed Upload via FormData
+          const formData = new FormData();
+          Object.entries(item.uploadFields).forEach(([key, val]) => {
+            formData.append(key, val);
+          });
+          formData.append("file", item.file);
+          xhr.send(formData);
+        } else {
+          // Binary PUT Upload (mock or direct storage)
+          xhr.setRequestHeader("Content-Type", item.file.type || "application/octet-stream");
+          xhr.send(item.file);
+        }
       });
 
       if (!uploadSuccess) {
@@ -580,7 +606,7 @@ export function ImageUploader({
                         <div className="mt-1.5 space-y-1">
                           <ProgressBar value={item.progress} max={100} showPercent={false} className="space-y-0" />
                           <div className="flex justify-between text-[10px] text-zinc-400">
-                            <span>Uploading directly to R2...</span>
+                            <span>Uploading directly to Cloud Storage...</span>
                             <span>{item.progress}%</span>
                           </div>
                         </div>

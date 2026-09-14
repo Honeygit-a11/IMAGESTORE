@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
-import { buildStorageKey, getPresignedUploadUrl } from "@/lib/storage/r2";
+import { buildStorageKey, getSignedUploadParams } from "@/lib/storage/cloudinary";
 import { applySlidingWindowRateLimit } from "@/lib/auth/rate-limit";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
@@ -161,8 +161,8 @@ export async function POST(
       data: { storageKey },
     });
 
-    // Generate presigned PUT upload URL (valid for 15 minutes)
-    const uploadUrl = await getPresignedUploadUrl({
+    // Generate signed direct upload parameters
+    const uploadParams = await getSignedUploadParams({
       storageKey,
       contentType: fileType,
       contentLength: fileSize,
@@ -173,7 +173,9 @@ export async function POST(
       imageId: image.id,
       fileName: image.fileName,
       storageKey,
-      uploadUrl,
+      uploadUrl: uploadParams.uploadUrl,
+      uploadMethod: uploadParams.uploadMethod,
+      uploadFields: uploadParams.uploadFields,
       expiresInSeconds: 900,
     });
   } catch (error) {
