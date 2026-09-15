@@ -1,0 +1,87 @@
+# yaml-language-server: $schema=https://render.com/schema/render.yaml.json
+# ImageSpace: web application, managed PostgreSQL, and daily maintenance job.
+
+services:
+  - type: web
+    name: imagespace-honeygit-a11
+    runtime: node
+    region: singapore
+    plan: free
+    branch: master
+    buildCommand: npm ci && npm run build
+    # Free web services do not support Render's pre-deploy command. Run the
+    # idempotent Prisma schema sync before each application start instead.
+    startCommand: npx prisma db push && npm start
+    healthCheckPath: /api/v1/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: imagespace-postgres
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://imagespace-honeygit-a11.onrender.com
+      - fromGroup: imagespace-internal-secrets
+      # Image persistence is provided by Cloudinary. Set these during the
+      # initial Blueprint apply; no credentials are committed to Git.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Required for delivery of verification, reset, invitation, and security
+      # emails. Render stores the supplied values as service secrets.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+
+  - type: cron
+    name: imagespace-maintenance
+    runtime: node
+    region: singapore
+    # Render Cron Jobs have a $1/month minimum and do not support the free plan.
+    plan: 0.5c-512mb
+    branch: master
+    buildCommand: "true"
+    startCommand: >-
+      curl --fail --silent --show-error --request POST
+      "http://${IMAGESPACE_WEB_HOSTPORT}/api/v1/jobs/run"
+      --header "Authorization: Bearer ${CRON_SECRET}"
+    schedule: "0 2 * * *"
+    autoDeployTrigger: commit
+    envVars:
+      - key: IMAGESPACE_WEB_HOSTPORT
+        fromService:
+          name: imagespace-honeygit-a11
+          type: web
+          property: hostport
+      - fromGroup: imagespace-internal-secrets
+
+databases:
+  - name: imagespace-postgres
+    plan: free
+    region: singapore
+    databaseName: imagespace
+    user: imagespace
+    postgresMajorVersion: 17
+
+envVarGroups:
+  - name: imagespace-internal-secrets
+    envVars:
+      - key: CRON_SECRET
+        generateValue: true
+
+previews:
+  generation: off
