@@ -1,4 +1,4 @@
-import prisma from "@/lib/db/prisma";
+import prisma, { ensureDatabaseReady } from "@/lib/db/prisma";
 import { apiSuccess, apiError } from "@/lib/api/response";
 
 /**
@@ -9,6 +9,9 @@ import { apiSuccess, apiError } from "@/lib/api/response";
 export async function GET() {
   const startTime = Date.now();
   try {
+    // Ensure all migrations are applied
+    await ensureDatabaseReady();
+
     // Probe database connectivity with lightweight ping
     await prisma.$queryRaw`SELECT 1`;
     const latencyMs = Date.now() - startTime;

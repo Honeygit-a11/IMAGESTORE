@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import prisma from "@/lib/db/prisma";
+import prisma, { ensureDatabaseReady } from "@/lib/db/prisma";
 import { hashPassword, validatePasswordStrength } from "@/lib/auth/password";
 import { generateVerificationCode } from "@/lib/auth/session";
 import { sendVerificationEmail } from "@/lib/email/mailer";
@@ -37,6 +37,8 @@ export async function POST(req: NextRequest) {
     if (!strength.valid) {
       return apiError("WEAK_PASSWORD", strength.message || "Password is too weak", undefined, 422);
     }
+
+    await ensureDatabaseReady();
 
     // Check if user exists
     const existing = await prisma.user.findUnique({

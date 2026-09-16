@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import prisma from "@/lib/db/prisma";
+import prisma, { ensureDatabaseReady } from "@/lib/db/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import {
   checkRateLimit,
@@ -40,6 +40,8 @@ export async function POST(req: NextRequest) {
         429
       );
     }
+
+    await ensureDatabaseReady();
 
     // Lookup user
     const user = await prisma.user.findUnique({

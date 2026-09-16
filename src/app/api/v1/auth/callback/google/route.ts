@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/db/prisma";
+import prisma, { ensureDatabaseReady } from "@/lib/db/prisma";
 import { createSession, SESSION_COOKIE_NAME, SESSION_MAX_AGE_DAYS } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 
@@ -78,6 +78,9 @@ export async function GET(req: NextRequest) {
     const name = profile.name || profile.given_name || email.split("@")[0];
     const image = profile.picture || null;
 
+    // Ensure all database migrations have run before querying
+    await ensureDatabaseReady();
+
     // Find or create user in database
     let user = await prisma.user.findUnique({
       where: { email },
@@ -102,6 +105,28 @@ export async function GET(req: NextRequest) {
           emailVerified: new Date(),
         },
       });
+
+      // Automatically initialize default workspace for new Google OAuth user
+      const workspaceName = `${name || "My"}'s Workspace`;
+      await prisma.workspace.create({
+        data: {
+          name: workspaceName,
+          ownerId: user.id,
+          members: {
+            create: {
+              userId: user.id,
+              role: "OWNER",
+            },
+          },
+          activityLogs: {
+            create: {
+              userId: user.id,
+              action: "WORKSPACE_CREATED",
+              metadata: { workspaceName },
+            },
+          },
+        },
+      });
     }
 
     // Establish active session in database
@@ -124,10 +149,11 @@ export async function GET(req: NextRequest) {
     redirectRes.cookies.delete("oauth_state");
 
     return redirectRes;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("[Google OAuth Callback Error]", error);
+    const errMessage = error instanceof Error ? error.message : "Unknown server error";
     const redirectRes = NextResponse.redirect(
-      `${baseUrl}/login?error=oauth_callback_failed`,
+      `${baseUrl}/login?error=oauth_callback_failed&details=${encodeURIComponent(errMessage.slice(0, 150))}`,
       302
     );
     redirectRes.cookies.delete("oauth_state");
