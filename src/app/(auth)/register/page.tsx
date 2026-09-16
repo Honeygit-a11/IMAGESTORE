@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/landing/navbar";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { User, Mail, Lock, CheckCircle2, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 
 export default function RegisterPage() {

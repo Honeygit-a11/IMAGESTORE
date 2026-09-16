@@ -299,6 +299,7 @@ const DriftWall = ({
     return (
       <div key={id} className="drift-wall__tile">
         <span className="drift-wall__inner">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={item.image} alt={item.title ?? ''} loading="lazy" decoding="async" draggable={false} />
           <span className="drift-wall__overlay" aria-hidden="true" />
         </span>

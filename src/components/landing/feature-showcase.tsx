@@ -6,14 +6,8 @@ import {
   FolderKanban,
   Tag,
   Trash2,
-  ShieldCheck,
   Check,
   Zap,
-  Lock,
-  Cpu,
-  Database,
-  Layers,
-  Sparkles,
 } from "lucide-react";
 
 interface FeatureTab {

@@ -442,6 +442,7 @@ export const ParallaxCarousel = React.forwardRef<
                 style={{ borderRadius }}
               >
                 {/* Image Element */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   ref={(el) => {
                     imgRefs.current[index] = el;

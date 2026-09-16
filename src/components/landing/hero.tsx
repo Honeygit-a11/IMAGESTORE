@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DriftWall from "@/components/DriftWall";
 import {

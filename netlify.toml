@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Omit public configuration variables from secret scanning
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_APP_URL"
+  # Omit Netlify internal build output and Next.js internal cache directories from secret scanning
+  SECRETS_SCAN_OMIT_PATHS = ".netlify/**,.next/**"

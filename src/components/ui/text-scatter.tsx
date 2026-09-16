@@ -53,8 +53,9 @@ export function TextScatter({
 
   // Clear pending return timers on unmount
   React.useEffect(() => {
+    const timeouts = timeoutsRef.current;
     return () => {
-      timeoutsRef.current.forEach((t) => {
+      timeouts.forEach((t) => {
         if (t) clearTimeout(t);
       });
     };
@@ -179,7 +180,7 @@ export function TextScatter({
 
   return (
     <Component
-      ref={containerRef as any}
+      ref={containerRef as React.Ref<never>}
       onPointerMove={handlePointerMove}
       className={cn(
         "inline-flex flex-wrap items-center cursor-default select-none",

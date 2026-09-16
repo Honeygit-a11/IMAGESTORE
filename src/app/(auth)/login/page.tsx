@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/landing/navbar";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Lock, Mail, AlertCircle, ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 
 function LoginForm() {

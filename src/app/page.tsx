@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Navbar } from "@/components/landing/navbar";
 import { HeroSection } from "@/components/landing/hero";
 import { ProductBenefits } from "@/components/landing/product-benefits";

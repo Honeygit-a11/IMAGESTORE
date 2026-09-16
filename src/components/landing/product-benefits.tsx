@@ -6,11 +6,6 @@ import {
   Tags,
   Users,
   CheckCircle2,
-  Lock,
-  Search,
-  SlidersHorizontal,
-  Mail,
-  ShieldCheck,
 } from "lucide-react";
 import { GlowCard } from "@/components/ui/spotlight-card";
 

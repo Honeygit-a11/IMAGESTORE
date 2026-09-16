@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Navbar } from "@/components/landing/navbar";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { MailCheck, CheckCircle2, AlertCircle, ArrowRight, Loader2, Key } from "lucide-react";
 
 function VerifyEmailForm() {

@@ -98,7 +98,7 @@ export default function FeaturedSectionStats({
             />
             <Tooltip
               cursor={{ fill: "rgba(113, 113, 122, 0.08)" }}
-              formatter={(val: any) => [`${val} MB`, "Allocation"]}
+              formatter={(val: unknown) => [`${val} MB`, "Allocation"]}
               contentStyle={{
                 backgroundColor: "rgba(24, 24, 27, 0.95)",
                 borderColor: "rgba(63, 63, 70, 0.5)",
