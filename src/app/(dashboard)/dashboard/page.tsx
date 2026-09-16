@@ -1,77 +1,15 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Plus,
-  FolderKanban,
-  HardDrive,
-  Users,
-  Image as ImageIcon,
-  MoreVertical,
-  Trash2,
-  ExternalLink,
-  Crown,
-  Edit3,
-  Eye,
-  Clock,
-  MailCheck,
-  Check,
-  X,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
-import { EmptyState } from "@/components/ui/empty-state";
-import { StatTile } from "@/components/ui/stat-tile";
-import { StatGridSkeleton } from "@/components/ui/skeleton-loaders";
-import { Stagger, MountReveal } from "@/components/ui/stagger";
 import { toast } from "sonner";
-
-interface WorkspaceItem {
-  id: string;
-  name: string;
-  role: "OWNER" | "EDITOR" | "VIEWER";
-  isOwner: boolean;
-  memberCount: number;
-  imageCount: number;
-  storageUsedBytes: number;
-  storageUsedMb: string;
-  createdAt: string;
-}
-
-interface UserMeData {
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-  };
-  storage: {
-    usedBytes: number;
-    maxBytes: number;
-    usedFormatted: string;
-    maxFormatted: string;
-    percentUsed: number;
-  };
-  workspaces: {
-    currentCount: number;
-    maxCount: number;
-    canCreate: boolean;
-  };
-}
-
-interface PendingInvite {
-  id: string;
-  token: string;
-  workspaceId: string;
-  workspaceName: string;
-  role: "EDITOR" | "VIEWER";
-  invitedByName: string;
-  expiresAt: string;
-}
+import { StatGridSkeleton } from "@/components/ui/skeleton-loaders";
+import {
+  Dashboard8,
+  WorkspaceItem,
+  UserMeData,
+  PendingInvite,
+} from "@/components/dashboard/dashboard-8";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -80,13 +18,6 @@ export default function DashboardPage() {
   const [pendingInvites, setPendingInvites] = React.useState<PendingInvite[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [inviteActionLoading, setInviteActionLoading] = React.useState(false);
-
-  const [createOpen, setCreateOpen] = React.useState(false);
-  const [newWorkspaceName, setNewWorkspaceName] = React.useState("");
-  const [createLoading, setCreateLoading] = React.useState(false);
-
-  const [deleteTarget, setDeleteTarget] = React.useState<WorkspaceItem | null>(null);
-  const [deleteLoading, setDeleteLoading] = React.useState(false);
 
   const fetchDashboardData = React.useCallback(async () => {
     try {
@@ -142,8 +73,8 @@ export default function DashboardPage() {
         return;
       }
 
-      toast.success(data.data.message);
-      fetchDashboardData();
+      toast.success(data.data?.message || "Invitation updated");
+      await fetchDashboardData();
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
@@ -151,42 +82,36 @@ export default function DashboardPage() {
     }
   };
 
-  const handleCreateWorkspace = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newWorkspaceName.trim()) return;
-
-    setCreateLoading(true);
+  const handleCreateWorkspace = async (name: string) => {
     try {
       const res = await fetch("/api/v1/workspaces", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newWorkspaceName.trim() }),
+        body: JSON.stringify({ name }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         toast.error(data.error?.message || "Failed to create workspace");
-        return;
+        throw new Error(data.error?.message || "Failed to create workspace");
       }
 
       toast.success(`Workspace "${data.data.name}" created successfully!`);
-      setNewWorkspaceName("");
-      setCreateOpen(false);
-      fetchDashboardData();
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setCreateLoading(false);
+      await fetchDashboardData();
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message) {
+        // already toasted
+      } else {
+        toast.error("Network error. Please try again.");
+      }
+      throw err;
     }
   };
 
-  const handleDeleteWorkspace = async () => {
-    if (!deleteTarget) return;
-
-    setDeleteLoading(true);
+  const handleDeleteWorkspace = async (workspace: WorkspaceItem) => {
     try {
-      const res = await fetch(`/api/v1/workspaces/${deleteTarget.id}`, {
+      const res = await fetch(`/api/v1/workspaces/${workspace.id}`, {
         method: "DELETE",
       });
 
@@ -194,16 +119,18 @@ export default function DashboardPage() {
 
       if (!res.ok) {
         toast.error(data.error?.message || "Failed to delete workspace");
-        return;
+        throw new Error(data.error?.message || "Failed to delete workspace");
       }
 
       toast.success(data.data?.message || "Workspace deleted permanently");
-      setDeleteTarget(null);
-      fetchDashboardData();
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setDeleteLoading(false);
+      await fetchDashboardData();
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message) {
+        // already toasted
+      } else {
+        toast.error("Network error. Please try again.");
+      }
+      throw err;
     }
   };
 
@@ -214,334 +141,24 @@ export default function DashboardPage() {
           <div className="h-8 w-48 rounded-lg bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse" />
           <div className="mt-2 h-4 w-96 max-w-full rounded bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
         </div>
-        <StatGridSkeleton count={3} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-zinc-200 p-6 dark:border-zinc-800"
-            >
-              <div className="h-5 w-1/3 rounded bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse" />
-              <div className="mt-3 h-4 w-1/2 rounded bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
-              <div className="mt-5 grid grid-cols-3 gap-2.5">
-                {Array.from({ length: 3 }).map((_, j) => (
-                  <div key={j} className="h-14 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
-                ))}
-              </div>
-            </div>
-          ))}
+        <StatGridSkeleton count={4} />
+        <div className="rounded-2xl border border-zinc-200 p-6 dark:border-zinc-800 space-y-4">
+          <div className="h-5 w-1/4 rounded bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse" />
+          <div className="h-44 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
         </div>
       </div>
     );
   }
 
-  const workspaceCount = userMe?.workspaces.currentCount ?? workspaces.length;
-  const canCreateWorkspace = userMe?.workspaces.canCreate ?? workspaceCount < 2;
-
   return (
-    <div className="space-y-8">
-      {/* Top Header & Action */}
-      <MountReveal className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-zinc-100 dark:to-zinc-400 bg-clip-text text-transparent">
-              Workspaces
-            </h1>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 text-blue-600 dark:text-blue-400 font-mono border border-blue-200/60 dark:border-blue-800/50">
-              {workspaceCount} / 2
-            </span>
-          </div>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Collaborate on image assets with role-based permissions (up to 2 workspaces, 500 MB total).
-          </p>
-        </div>
-
-        <Button
-          onClick={() => setCreateOpen(true)}
-          disabled={!canCreateWorkspace}
-          className="self-start sm:self-auto shadow-md hover:shadow-lg transition-shadow"
-          title={!canCreateWorkspace ? "Maximum limit of 2 workspaces reached" : undefined}
-        >
-          <Plus className="mr-1.5 h-4 w-4" />
-          Create Workspace
-        </Button>
-      </MountReveal>
-
-      {/* Pending Invitations Banner */}
-      {pendingInvites.length > 0 && (
-        <div className="space-y-3">
-          {pendingInvites.map((inv) => (
-            <div
-              key={inv.id}
-              className="animate-fade-in-down p-4 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 border-l-4 border-l-blue-500 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center shrink-0 animate-float">
-                  <MailCheck className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                    Invitation to join &quot;{inv.workspaceName}&quot;
-                  </div>
-                  <div className="text-xs text-zinc-600 dark:text-zinc-300 mt-0.5">
-                    <strong>{inv.invitedByName}</strong> invited you to collaborate as an{" "}
-                    <strong className="text-blue-600 dark:text-blue-400">{inv.role}</strong>. (Expires{" "}
-                    {new Date(inv.expiresAt).toLocaleDateString()})
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 self-end sm:self-auto">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleRespondInvite(inv.token, "DECLINE")}
-                  disabled={inviteActionLoading}
-                  className="text-xs"
-                >
-                  <X className="mr-1 h-3.5 w-3.5" />
-                  Decline
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleRespondInvite(inv.token, "ACCEPT")}
-                  disabled={inviteActionLoading || workspaceCount >= 2}
-                  loading={inviteActionLoading}
-                  className="text-xs shadow-xs"
-                  title={workspaceCount >= 2 ? "You already have 2 workspaces" : undefined}
-                >
-                  <Check className="mr-1 h-3.5 w-3.5" />
-                  Accept Invitation
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Storage & Capacity Summary Cards */}
-      <Stagger stagger={0.1} className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <StatTile
-          label="Workspace Limit"
-          value={workspaceCount}
-          suffix=" / 2 max"
-          icon={<FolderKanban className="h-4 w-4" />}
-          accent="blue"
-          valueClassName="text-3xl"
-          headerRight={
-            <span className={canCreateWorkspace ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-amber-500 font-bold"}>
-              {canCreateWorkspace ? "Available" : "Limit Reached"}
-            </span>
-          }
-        />
-        <StatTile
-          label="Total Storage"
-          display={`${userMe?.storage.usedFormatted ?? "0 MB"} / 500 MB`}
-          icon={<HardDrive className="h-4 w-4" />}
-          accent="green"
-          valueClassName="text-3xl"
-          progress={{
-            value: userMe?.storage.usedBytes ?? 0,
-            max: userMe?.storage.maxBytes ?? 524288000,
-          }}
-        />
-        <StatTile
-          label="Member Cap"
-          value={3}
-          suffix=" / Workspace"
-          icon={<Users className="h-4 w-4" />}
-          accent="purple"
-          valueClassName="text-3xl"
-        />
-      </Stagger>
-
-      {/* Workspaces Grid / Empty State */}
-      {workspaces.length === 0 ? (
-        <EmptyState
-          icon={<FolderKanban className="h-6 w-6 animate-float" />}
-          title="No workspaces yet"
-          description="Create your first workspace to upload images, invite team members, and manage permissions."
-          action={
-            <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="mr-1.5 h-4 w-4" />
-              Create Your First Workspace
-            </Button>
-          }
-        />
-      ) : (
-        <Stagger stagger={0.08} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {workspaces.map((ws) => (
-            <div
-              key={ws.id}
-              className="group relative rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between overflow-hidden"
-            >
-              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-blue-500/0 to-transparent transition-all duration-300 group-hover:via-blue-500/60" />
-              <div>
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/workspaces/${ws.id}`}
-                        className="text-lg font-bold text-zinc-900 dark:text-zinc-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5"
-                      >
-                        {ws.name}
-                        <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </Link>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span
-                        className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full transition-shadow ${
-                          ws.role === "OWNER"
-                            ? "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)]"
-                            : ws.role === "EDITOR"
-                            ? "bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300"
-                            : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                        }`}
-                      >
-                        {ws.role === "OWNER" && <Crown className="h-3 w-3" />}
-                        {ws.role === "EDITOR" && <Edit3 className="h-3 w-3" />}
-                        {ws.role === "VIEWER" && <Eye className="h-3 w-3" />}
-                        {ws.role}
-                      </span>
-                      <span className="text-xs text-zinc-400">
-                        Immutable Name
-                      </span>
-                    </div>
-                  </div>
-
-                  {ws.isOwner && (
-                    <Dropdown
-                      trigger={
-                        <button
-                          className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                          title="Workspace actions"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </button>
-                      }
-                    >
-                      <DropdownItem
-                        destructive
-                        onClick={() => setDeleteTarget(ws)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete Workspace
-                      </DropdownItem>
-                    </Dropdown>
-                  )}
-                </div>
-
-                {/* Metrics Pill Grid */}
-                <div className="grid grid-cols-3 gap-2.5 py-4 border-y border-zinc-100 dark:border-zinc-800/80 text-xs">
-                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 transition-colors hover:bg-blue-50/60 dark:hover:bg-blue-950/30">
-                    <div className="flex items-center gap-1 text-zinc-400 mb-1">
-                      <Users className="h-3.5 w-3.5" />
-                      <span>Members</span>
-                    </div>
-                    <span className="font-bold text-zinc-800 dark:text-zinc-200">
-                      {ws.memberCount} / 3 max
-                    </span>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 transition-colors hover:bg-emerald-50/60 dark:hover:bg-emerald-950/30">
-                    <div className="flex items-center gap-1 text-zinc-400 mb-1">
-                      <ImageIcon className="h-3.5 w-3.5" />
-                      <span>Images</span>
-                    </div>
-                    <span className="font-bold text-zinc-800 dark:text-zinc-200">
-                      {ws.imageCount} files
-                    </span>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 transition-colors hover:bg-purple-50/60 dark:hover:bg-purple-950/30">
-                    <div className="flex items-center gap-1 text-zinc-400 mb-1">
-                      <HardDrive className="h-3.5 w-3.5" />
-                      <span>Storage</span>
-                    </div>
-                    <span className="font-bold text-zinc-800 dark:text-zinc-200">
-                      {ws.storageUsedMb} MB
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between text-xs text-zinc-400">
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  Created {new Date(ws.createdAt).toLocaleDateString()}
-                </span>
-                <Link
-                  href={`/workspaces/${ws.id}`}
-                  className="font-semibold text-zinc-900 dark:text-zinc-100 hover:underline underline-offset-2 flex items-center gap-1"
-                >
-                  Enter Workspace &rarr;
-                </Link>
-              </div>
-            </div>
-          ))}
-        </Stagger>
-      )}
-
-      {/* Create Workspace Modal */}
-      <Dialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        title="Create New Workspace"
-        description="Choose a name for your workspace. Names can be duplicated across ImageSpace and cannot be changed after creation."
-      >
-        <form onSubmit={handleCreateWorkspace} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-              Workspace Name
-            </label>
-            <Input
-              required
-              maxLength={50}
-              value={newWorkspaceName}
-              onChange={(e) => setNewWorkspaceName(e.target.value)}
-              placeholder="e.g. Studio Editorial, Marketing Assets"
-              disabled={createLoading}
-              autoFocus
-            />
-            <p className="text-[11px] text-zinc-400 mt-1">
-              Max 50 characters · Automatically assigned as OWNER
-            </p>
-          </div>
-
-          <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCreateOpen(false)}
-              disabled={createLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={!newWorkspaceName.trim() || createLoading}
-              loading={createLoading}
-            >
-              Create Workspace
-            </Button>
-          </div>
-        </form>
-      </Dialog>
-
-      {deleteTarget && (
-        <ConfirmationDialog
-          open={!!deleteTarget}
-          onOpenChange={(open) => !open && setDeleteTarget(null)}
-          title={`Delete "${deleteTarget.name}"?`}
-          description="This action is permanent and destructive. All images, tags, members, and activity logs in this workspace will be permanently removed. Storage used by these images will be released."
-          matchTarget={deleteTarget.name}
-          confirmText="Delete Workspace Permanently"
-          loading={deleteLoading}
-          onConfirm={handleDeleteWorkspace}
-        />
-      )}
-    </div>
+    <Dashboard8
+      workspaces={workspaces}
+      userMe={userMe}
+      pendingInvites={pendingInvites}
+      inviteActionLoading={inviteActionLoading}
+      onRespondInvite={handleRespondInvite}
+      onCreateWorkspace={handleCreateWorkspace}
+      onDeleteWorkspace={handleDeleteWorkspace}
+    />
   );
 }

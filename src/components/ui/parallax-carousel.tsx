@@ -78,6 +78,8 @@ export const ParallaxCarousel = React.forwardRef<
     const lastTimestamp = React.useRef<number | null>(null);
     const rafId = React.useRef<number | null>(null);
     const initializedRef = React.useRef(false);
+    const visibleRef = React.useRef(true);
+    const startRef = React.useRef<(() => void) | null>(null);
 
     // Normalize incoming items
     const normalizedItems: CarouselImageItem[] = React.useMemo(() => {
@@ -174,6 +176,11 @@ export const ParallaxCarousel = React.forwardRef<
     // Animation & Infinite Loop
     React.useEffect(() => {
       const animate = (timestamp: number) => {
+        // Pause whenever the carousel leaves the viewport (saves a perpetual rAF loop otherwise).
+        if (!visibleRef.current) {
+          rafId.current = null;
+          return;
+        }
         const state = scrollState.current;
         const cfg = config.current;
         const last = lastTimestamp.current ?? timestamp;
@@ -258,7 +265,13 @@ export const ParallaxCarousel = React.forwardRef<
         rafId.current = requestAnimationFrame(animate);
       };
 
-      rafId.current = requestAnimationFrame(animate);
+      const start = () => {
+        if (rafId.current !== null) return;
+        lastTimestamp.current = null;
+        rafId.current = requestAnimationFrame(animate);
+      };
+      startRef.current = start;
+      start();
       return () => {
         if (rafId.current !== null) {
           cancelAnimationFrame(rafId.current);
@@ -267,6 +280,26 @@ export const ParallaxCarousel = React.forwardRef<
         lastTimestamp.current = null;
       };
     }, [displayItems]);
+
+    // Visibility gating: stop the rAF loop when the carousel is off-screen, resume on return.
+    React.useEffect(() => {
+      const el = containerRef.current;
+      if (!el || typeof IntersectionObserver === "undefined") return;
+      const io = new IntersectionObserver(
+        (entries) => {
+          visibleRef.current = entries[0]?.isIntersecting ?? false;
+          if (visibleRef.current) {
+            startRef.current?.();
+          } else if (rafId.current !== null) {
+            cancelAnimationFrame(rafId.current);
+            rafId.current = null;
+          }
+        },
+        { rootMargin: "150px 0px" }
+      );
+      io.observe(el);
+      return () => io.disconnect();
+    }, []);
 
     // Drag, Touch & Wheel Handlers
     React.useEffect(() => {

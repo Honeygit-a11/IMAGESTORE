@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import './DriftWall.css';
 
 // Seeded PRNG for consistent SSR and client hydration
@@ -103,6 +103,11 @@ const DriftWall = ({
   const offsetsRef = useRef([]);
   const velocitiesRef = useRef([]);
   const lastTsRef = useRef(null);
+  const reducedRef = useRef(false);
+  const visibleRef = useRef(false);
+  const runningRef = useRef(false);
+  const baseVelocitiesRef = useRef(null);
+  const columnMetaRef = useRef(null);
 
   const [containerHeight, setContainerHeight] = useState(600);
   const [containerWidth, setContainerWidth] = useState(1920);
@@ -126,14 +131,18 @@ const DriftWall = ({
   const columnItems = useMemo(() => {
     if (!items || items.length === 0) return [];
     const pool = items.length >= 8 ? items : DEFAULT_ITEMS;
-    const itemsPerCol = Math.max(8, Math.min(pool.length, 14));
+    // Compact screens render fewer tiles per column (smaller, denser repeat) to cut DOM weight.
+    const compact = containerWidth < 640;
+    const itemsPerCol = compact
+      ? Math.max(5, Math.min(pool.length, 7))
+      : Math.max(8, Math.min(pool.length, 14));
 
     return Array.from({ length: colCount }, (_, c) => {
       // Deterministically shuffle with unique prime seeds per column
       const shuffled = shuffleArray(pool, (c + 1) * 7919 + 1337);
       return shuffled.slice(0, itemsPerCol);
     });
-  }, [items, colCount]);
+  }, [items, colCount, containerWidth]);
 
   const columnMeta = useMemo(() => {
     const unit = tileHeight + gap;
@@ -176,6 +185,18 @@ const DriftWall = ({
     velocitiesRef.current = columnItems.map(() => 0);
   }, [columnMeta, columnItems]);
 
+  useEffect(() => { reducedRef.current = reduced; }, [reduced]);
+  useEffect(() => { baseVelocitiesRef.current = baseVelocities; }, [baseVelocities]);
+  useEffect(() => { columnMetaRef.current = columnMeta; }, [columnMeta]);
+
+  // Static baseline position so columns are placed before the loop starts (and under reduced motion).
+  useEffect(() => {
+    trackRefs.current.forEach((el, c) => {
+      const meta = columnMeta[c];
+      if (el && meta) el.style.transform = `translate3d(0, ${-(offsetsRef.current[c] ?? 0)}px, 0)`;
+    });
+  }, [columnMeta]);
+
   useEffect(() => {
     if (planeRef.current) {
       planeRef.current.style.transform =
@@ -185,45 +206,77 @@ const DriftWall = ({
     }
   }, [tilt, turn, roll, depth]);
 
-  useEffect(() => {
-    const animate = ts => {
+  // Animation loop, gated on viewport visibility and reduced-motion preference.
+  // The hero wall currently ran a requestAnimationFrame loop forever, even off-screen.
+  const stopLoop = useCallback(() => {
+    runningRef.current = false;
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }, []);
+
+  const startLoop = useCallback(() => {
+    if (runningRef.current) return;
+    if (reducedRef.current || !visibleRef.current) return;
+    runningRef.current = true;
+    lastTsRef.current = null;
+
+    const step = (ts) => {
+      if (!runningRef.current) return;
+      if (reducedRef.current || !visibleRef.current) {
+        stopLoop();
+        return;
+      }
+
       if (lastTsRef.current === null) lastTsRef.current = ts;
       const dt = Math.min(0.05, Math.max(0, ts - lastTsRef.current) / 1000);
       lastTsRef.current = ts;
 
-      if (!reduced) {
-        for (let c = 0; c < trackRefs.current.length; c++) {
-          const meta = columnMeta[c];
-          if (!meta) continue;
-          const target = baseVelocities[c];
+      const meta = columnMetaRef.current;
+      const baseVel = baseVelocitiesRef.current;
+      for (let c = 0; c < trackRefs.current.length; c++) {
+        const m = meta[c];
+        if (!m) continue;
+        const target = baseVel[c];
+        const ease = 1 - Math.exp(-dt / 0.28);
+        velocitiesRef.current[c] += (target - velocitiesRef.current[c]) * ease;
+        let next = (offsetsRef.current[c] ?? 0) + velocitiesRef.current[c] * dt;
+        next = ((next % m.copyHeight) + m.copyHeight) % m.copyHeight;
+        offsetsRef.current[c] = next;
 
-          const ease = 1 - Math.exp(-dt / 0.28);
-          velocitiesRef.current[c] += (target - velocitiesRef.current[c]) * ease;
-          let next = (offsetsRef.current[c] ?? 0) + velocitiesRef.current[c] * dt;
-          next = ((next % meta.copyHeight) + meta.copyHeight) % meta.copyHeight;
-          offsetsRef.current[c] = next;
-
-          const el = trackRefs.current[c];
-          if (el) el.style.transform = `translate3d(0, ${-next}px, 0)`;
-        }
-      } else {
-        for (let c = 0; c < trackRefs.current.length; c++) {
-          const el = trackRefs.current[c];
-          const meta = columnMeta[c];
-          if (el && meta) el.style.transform = `translate3d(0, ${-(offsetsRef.current[c] ?? 0)}px, 0)`;
-        }
+        const el = trackRefs.current[c];
+        if (el) el.style.transform = `translate3d(0, ${-next}px, 0)`;
       }
 
-      rafRef.current = requestAnimationFrame(animate);
+      rafRef.current = requestAnimationFrame(step);
     };
 
-    rafRef.current = requestAnimationFrame(animate);
+    rafRef.current = requestAnimationFrame(step);
+  }, [stopLoop]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      visibleRef.current = true;
+      startLoop();
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        const vis = entries[0]?.isIntersecting ?? false;
+        visibleRef.current = vis;
+        if (vis) startLoop();
+        else stopLoop();
+      },
+      { rootMargin: "150px 0px" }
+    );
+    io.observe(el);
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-      lastTsRef.current = null;
+      io.disconnect();
+      stopLoop();
     };
-  }, [baseVelocities, columnMeta, reduced]);
+  }, [startLoop, stopLoop]);
 
   const cssVars = useMemo(
     () => ({

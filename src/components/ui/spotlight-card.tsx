@@ -45,20 +45,33 @@ const GlowCard: React.FC<GlowCardProps> = ({
   const innerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const syncPointer = (e: PointerEvent) => {
-      const { clientX: x, clientY: y } = e;
-      
-      if (cardRef.current) {
-        cardRef.current.style.setProperty('--x', x.toFixed(2));
-        cardRef.current.style.setProperty('--xp', (x / window.innerWidth).toFixed(2));
-        cardRef.current.style.setProperty('--y', y.toFixed(2));
-        cardRef.current.style.setProperty('--yp', (y / window.innerHeight).toFixed(2));
-      }
-    };
+      const card = cardRef.current;
+      if (!card) return;
+      let raf = 0;
+      let px = 0; let py = 0; let pending = false;
 
-    document.addEventListener('pointermove', syncPointer);
-    return () => document.removeEventListener('pointermove', syncPointer);
-  }, []);
+      const apply = () => {
+        raf = 0;
+        pending = false;
+        card.style.setProperty('--x', px.toFixed(2));
+        card.style.setProperty('--xp', (px / window.innerWidth).toFixed(2));
+        card.style.setProperty('--y', py.toFixed(2));
+        card.style.setProperty('--yp', (py / window.innerHeight).toFixed(2));
+      };
+
+      const syncPointer = (e: PointerEvent) => {
+        px = e.clientX; py = e.clientY;
+        if (!pending) { pending = true; raf = requestAnimationFrame(apply); }
+      };
+
+      // Scoped to the card (was a global document listener that wrote vars on every page move)
+      // and coalesced to one write per animation frame.
+      card.addEventListener('pointermove', syncPointer);
+      return () => {
+        card.removeEventListener('pointermove', syncPointer);
+        if (raf) cancelAnimationFrame(raf);
+      };
+    }, []);
 
   const { base, spread, saturation, lightness } = glowColorMap[glowColor];
 

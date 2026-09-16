@@ -1,0 +1,183 @@
+# Antigravity Plan — React Bits Performance Optimization
+
+### Objective
+
+Optimize the **existing React Bits components** without changing the site's visual identity or removing components unnecessarily.
+
+### Phase 1 — Audit
+
+1. Scan the entire project.
+2. Find every React Bits component currently installed/used.
+3. Identify their dependencies:
+
+   * Framer Motion
+   * GSAP
+   * Three.js
+   * Canvas
+   * other animation libraries
+4. Find components running continuously:
+
+   * `requestAnimationFrame`
+   * mouse tracking
+   * scroll listeners
+   * particle systems
+   * infinite animations
+5. Identify unnecessary re-renders.
+6. Record the current baseline:
+
+   * build size
+   * JS bundle size
+   * LCP
+   * CLS
+   * INP
+   * initial page load
+
+### Phase 2 — Component Optimization
+
+For **each React Bits component**:
+
+1. Preserve the existing UI/visual appearance.
+2. Remove unused props, utilities, and dependencies.
+3. Move animation state out of React state where it updates every frame.
+4. Replace JavaScript animation with CSS when the effect allows it.
+5. Reduce unnecessary DOM elements.
+6. Reduce particle/object counts where applicable.
+7. Throttle/debounce mouse and scroll calculations where appropriate.
+8. Stop animations when the component isn't visible.
+9. Clean up all event listeners, timers, observers, and animation frames.
+
+### Phase 3 — Loading Strategy
+
+Implement three categories:
+
+**Critical**
+
+* Hero
+* Navbar
+* First viewport
+
+→ Load immediately.
+
+**Deferred**
+
+* Below-the-fold React Bits components
+
+→ Lazy load when required.
+
+**Heavy**
+
+* 3D
+* Canvas
+* particles
+* complex GSAP effects
+
+→ Dynamic/lazy loading + viewport activation.
+
+### Phase 4 — Responsive Optimization
+
+Desktop:
+
+> Full visual effect
+
+Tablet:
+
+> Reduced effect complexity
+
+Mobile:
+
+> Lightweight variant
+
+For example:
+
+`100 particles → 40 → 15`
+
+instead of running the same expensive animation everywhere.
+
+### Phase 5 — Visibility-Based Animation
+
+Use viewport detection so expensive components behave like:
+
+**Not visible**
+→ animation stopped
+
+**Entering viewport**
+→ initialize
+
+**Visible**
+→ animation active
+
+**Leaving viewport**
+→ pause/cleanup
+
+This is especially important for long landing pages containing multiple React Bits effects.
+
+### Phase 6 — Dependency Optimization
+
+Audit `package.json` and remove dependencies that are:
+
+* unused
+* duplicated
+* only required by components that were removed
+* unnecessarily loaded on the client
+
+Do **not** replace a dependency blindly. First verify which components actually require it.
+
+### Phase 7 — Next.js Optimization
+
+For your Next.js App Router:
+
+* Keep non-interactive React Bits components server-renderable where possible.
+* Use Client Components only where interaction/animation requires them.
+* Dynamically load genuinely heavy client components.
+* Avoid making the entire page a `"use client"` component just because one React Bits component needs it.
+
+### Phase 8 — Visual Regression
+
+After optimization, verify:
+
+* same layout
+* same spacing
+* same typography
+* same animation appearance
+* same hover interactions
+* no hydration errors
+* no console errors
+* no mobile overflow
+* no layout shifting
+
+**Performance optimization must not accidentally change the design.**
+
+### Phase 9 — Measure Again
+
+Compare:
+
+| Metric        |   Before |    After |
+| ------------- | -------: | -------: |
+| Initial JS    | baseline | target ↓ |
+| Bundle size   | baseline | target ↓ |
+| LCP           | baseline | target ↓ |
+| CLS           | baseline | target ↓ |
+| INP           | baseline | target ↓ |
+| Animation FPS | baseline | target ↑ |
+
+### Phase 10 — Final Cleanup
+
+After everything works:
+
+1. Remove dead React Bits code.
+2. Remove unused dependencies.
+3. Remove duplicate animation implementations.
+4. Run production build.
+5. Run Lighthouse/PageSpeed.
+6. Test desktop + mobile.
+7. Document any intentionally simplified React Bits components.
+
+### Antigravity execution rule
+
+**Do not rewrite all React Bits components at once.**
+
+Process them individually:
+
+`Audit → Optimize → Build → Visual test → Performance test → Next component`
+
+This prevents one optimization from breaking the entire landing page.

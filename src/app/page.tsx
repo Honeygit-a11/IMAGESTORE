@@ -4,7 +4,7 @@ import { HeroSection } from "@/components/landing/hero";
 import { ProductBenefits } from "@/components/landing/product-benefits";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { FeatureShowcase } from "@/components/landing/feature-showcase";
-import { StorageSimulator } from "@/components/landing/storage-simulator";
+import StorageSimulatorLazy from "@/components/landing/storage-simulator-lazy";
 import { RoleMatrix } from "@/components/landing/role-matrix";
 import { FinalCta } from "@/components/landing/final-cta";
 import { Footer8 } from "@/components/ui/footer-8";
@@ -28,8 +28,8 @@ export default function HomePage() {
         {/* 4. Feature Showcase */}
         <FeatureShowcase />
 
-        {/* 5. Storage Experience Simulator */}
-        <StorageSimulator />
+        {/* 5. Storage Experience Simulator (lazy-loaded; pulls in recharts client chunk) */}
+        <StorageSimulatorLazy />
 
         {/* 6. Role Overview & Permissions Matrix */}
         <RoleMatrix />

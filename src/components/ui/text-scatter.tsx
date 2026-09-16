@@ -127,22 +127,55 @@ export function TextScatter({
   );
 
   // Scatter all on container hover
-  const handlePointerMove = (e: React.PointerEvent) => {
-    letterRefs.current.forEach((el, i) => {
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = e.clientX - cx;
-      const dy = e.clientY - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+  const letterStatesRef = React.useRef(letterStates);
+  React.useEffect(() => {
+    letterStatesRef.current = letterStates;
+  });
 
-      // Trigger if cursor is within active radius
-      if (dist < 80 && !letterStates[i]?.isScattered) {
-        triggerScatter(i, e.clientX, e.clientY);
-      }
-    });
-  };
+  const pendingMoveRef = React.useRef<{ x: number; y: number } | null>(null);
+  const frameRef = React.useRef<number | null>(null);
+
+  // Coalesce high-frequency pointermove into one rect-read pass per animation frame.
+  const processMove = React.useCallback(
+    (x: number, y: number) => {
+      letterRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = x - cx;
+        const dy = y - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Trigger if cursor is within active radius
+        if (dist < 80 && !letterStatesRef.current[i]?.isScattered) {
+          triggerScatter(i, x, y);
+        }
+      });
+    },
+    [triggerScatter]
+  );
+
+  const handlePointerMove = React.useCallback(
+    (e: React.PointerEvent) => {
+      pendingMoveRef.current = { x: e.clientX, y: e.clientY };
+      if (frameRef.current !== null) return;
+      frameRef.current = requestAnimationFrame(() => {
+        frameRef.current = null;
+        const pending = pendingMoveRef.current;
+        if (!pending) return;
+        processMove(pending.x, pending.y);
+      });
+    },
+    [processMove]
+  );
+
+  // Cancel any pending coalesced frame on unmount
+  React.useEffect(() => {
+    return () => {
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+    };
+  }, []);
 
   return (
     <Component
