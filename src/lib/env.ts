@@ -20,6 +20,10 @@ const envSchema = z.object({
   R2_PUBLIC_DOMAIN: z.string().optional().default(""),
   NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3001").transform((val) => val.replace(/\/+$/, "")),
   CRON_SECRET: z.string().optional().default("dev-cron-secret-change-in-production"),
+  JOBORC_PROJECT_ID: z.string().optional(),
+  JOBORC_API_KEY: z.string().optional(),
+  JOBORC_BASE_URL: z.string().optional(),
+  JOBORC_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export const env = envSchema.parse({
@@ -42,4 +46,8 @@ export const env = envSchema.parse({
   R2_PUBLIC_DOMAIN: process.env.R2_PUBLIC_DOMAIN,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   CRON_SECRET: process.env.CRON_SECRET || "dev-cron-secret-change-in-production",
+  JOBORC_PROJECT_ID: process.env.JOBORC_PROJECT_ID,
+  JOBORC_API_KEY: process.env.JOBORC_API_KEY,
+  JOBORC_BASE_URL: process.env.JOBORC_BASE_URL,
+  JOBORC_WEBHOOK_SECRET: process.env.JOBORC_WEBHOOK_SECRET,
 });

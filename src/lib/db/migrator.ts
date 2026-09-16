@@ -347,10 +347,17 @@ export async function runMigrations(pool: Pool): Promise<void> {
       throw connErr;
     }
 
+    let lockAcquired = false;
     try {
-      // 1. Acquire advisory lock (arbitrary unique lock ID: 8192039) so multiple
-      // concurrent lambda/serverless cold starts don't run migrations at the same time.
-      await client.query("SELECT pg_advisory_lock(8192039)");
+      // 1. Acquire non-blocking advisory lock so we don't hang or hit statement timeouts in pooled environments
+      try {
+        const lockRes = await client.query<{ acquired: boolean }>(
+          "SELECT pg_try_advisory_lock(8192039) AS acquired"
+        );
+        lockAcquired = lockRes.rows[0]?.acquired ?? false;
+      } catch {
+        lockAcquired = false;
+      }
 
       // 2. Ensure migrations tracking table exists
       await client.query(`
@@ -371,6 +378,11 @@ export async function runMigrations(pool: Pool): Promise<void> {
       for (const migration of MIGRATIONS) {
         if (appliedSet.has(migration.name)) {
           console.log(`[Migrations] Already applied, skipping: ${migration.name}`);
+          continue;
+        }
+
+        if (!lockAcquired) {
+          console.log(`[Migrations] Migration ${migration.name} pending, but advisory lock held by another process.`);
           continue;
         }
 
@@ -398,10 +410,12 @@ export async function runMigrations(pool: Pool): Promise<void> {
       migrationPromise = null;
       throw err;
     } finally {
-      try {
-        await client.query("SELECT pg_advisory_unlock(8192039)");
-      } catch {
-        // ignore unlock error if client already closed
+      if (lockAcquired) {
+        try {
+          await client.query("SELECT pg_advisory_unlock(8192039)");
+        } catch {
+          // ignore unlock error
+        }
       }
       client.release();
     }

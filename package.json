@@ -8,10 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --test tests/**/*.test.mjs",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "worker": "tsx --env-file=.env scripts/worker.ts",
+    "test:job": "tsx --env-file=.env scripts/test-job.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
+    "@joborc/sdk": "^0.1.1",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "bcryptjs": "^3.0.3",
@@ -46,6 +49,7 @@
     "eslint-config-next": "16.3.4",
     "prisma": "^7.10.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }

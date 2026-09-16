@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
-import { processImage } from "@/lib/processing/image";
+import { enqueueBackgroundJob } from "@/lib/jobs/joborc";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
 
 const completeSchema = z.object({
@@ -164,14 +164,25 @@ export async function POST(
       });
     });
 
-    // 2. Run Image processing & thumbnail generation
-    const processResult = await processImage(imageId);
+    // 2. Offload thumbnail generation & optimization to background job queue
+    const jobResult = await enqueueBackgroundJob(
+      "image.process",
+      {
+        imageId: image.id,
+        workspaceId,
+        fileName: image.fileName,
+      },
+      {
+        queue: "images",
+        priority: 5,
+      }
+    );
 
     return apiSuccess({
       imageId: image.id,
       fileName: image.fileName,
-      status: processResult.success ? "COMPLETED" : "FAILED",
-      thumbnailKey: processResult.thumbnailKey || null,
+      status: "PROCESSING",
+      jobId: jobResult.jobId || null,
       fileSize: Number(fileSize),
     });
   } catch (error) {
