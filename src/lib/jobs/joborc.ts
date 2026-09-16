@@ -72,9 +72,21 @@ export async function enqueueBackgroundJob<K extends JobName>(
   payload: JobPayloadMap[K],
   options?: EnqueueOptions
 ): Promise<{ enqueued: boolean; jobId?: string }> {
-  const client = getJobOrcClient();
+  const apiKey = env.JOBORC_API_KEY || process.env.JOBORC_API_KEY;
+  const projectId = env.JOBORC_PROJECT_ID || process.env.JOBORC_PROJECT_ID;
+
+  // If JobOrc credentials are not configured, execute in-process seamlessly
+  if (!apiKey || !projectId) {
+    try {
+      await executeJobDirectly(name, payload);
+    } catch (directErr) {
+      console.error(`[Jobs] Execution failed for ${name}:`, directErr);
+    }
+    return { enqueued: false };
+  }
 
   try {
+    const client = getJobOrcClient();
     const job = await client.jobs.enqueue(
       name,
       payload as Record<string, unknown>,
