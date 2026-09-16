@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -187,24 +186,17 @@ export function HeroSection() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useGSAP(
-    () => {
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+
+    const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-      tl.from(".hero-badge", {
+      tl.from(".hero-title", {
         opacity: 0,
-        y: -15,
-        duration: 0.6,
+        y: 25,
+        duration: 0.8,
       })
-        .from(
-          ".hero-title",
-          {
-            opacity: 0,
-            y: 25,
-            duration: 0.8,
-          },
-          "-=0.3",
-        )
         .from(
           ".hero-desc",
           {
@@ -212,7 +204,7 @@ export function HeroSection() {
             y: 20,
             duration: 0.7,
           },
-          "-=0.5",
+          "-=0.4",
         )
         .from(
           ".hero-cta",
@@ -232,9 +224,10 @@ export function HeroSection() {
           },
           "-=0.3",
         );
-    },
-    { scope: containerRef },
-  );
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
     <div ref={containerRef} className="w-full">
