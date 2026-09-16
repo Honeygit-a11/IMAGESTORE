@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { executeJobDirectly, type JobName } from "@/lib/jobs/joborc";
 
 /**
  * POST /api/webhooks/joborc
@@ -17,7 +18,16 @@ export async function POST(req: NextRequest) {
       hasSignature: Boolean(signature),
     });
 
-    // Handle specific event types if needed
+    // Handle job execution via webhook if payload is included
+    const jobName = (eventPayload.data?.name || eventPayload.name) as JobName | undefined;
+    const jobData = eventPayload.data?.payload || eventPayload.payload;
+
+    if (jobName && jobData) {
+      console.log(`[JobOrc Webhook] 🚀 Executing job '${jobName}' triggered by webhook...`);
+      await executeJobDirectly(jobName, jobData);
+    }
+
+    // Handle lifecycle event notifications
     const eventType = eventPayload.type || eventPayload.event;
     switch (eventType) {
       case "joborc.jobs.job.succeeded.v1":
