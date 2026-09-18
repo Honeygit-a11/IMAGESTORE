@@ -1,2 +1,2 @@
-web: npx prisma db push && npm start
+web: npm start
 worker: npm run worker

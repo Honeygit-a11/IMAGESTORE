@@ -247,3 +247,11 @@ model Notification {
   @@index([userId, createdAt(sort: Desc)])
 }
 
+model Migration {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(255)
+  appliedAt DateTime @default(now()) @map("applied_at") @db.Timestamptz()
+
+  @@map("_migrations")
+}
+
