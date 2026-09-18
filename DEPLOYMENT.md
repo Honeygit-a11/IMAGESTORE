@@ -134,14 +134,14 @@ When hosting the Next.js frontend/API on **Vercel**, background jobs (thumbnail 
 2. Select your repository.
 3. Railway automatically detects `Procfile` (`worker: npm run worker`).
 4. In the service settings, add your Environment Variables (see Section 2 + `JOBORC_API_KEY` & `JOBORC_PROJECT_ID`).
-5. Set Build Command to `npm ci` and Start Command to `npm run worker`.
+5. Set Build Command to `npm install` and Start Command to `npm run worker`.
 
 #### Option B: Render Background Worker
 1. In Render Dashboard, click **New +** → **Background Worker**.
 2. Connect your Git repository.
 3. Configuration:
    - **Environment**: Node
-   - **Build Command**: `npm ci`
+   - **Build Command**: `npm install`
    - **Start Command**: `npm run worker`
 4. Add the required Environment Variables.
 

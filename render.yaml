@@ -8,7 +8,7 @@ services:
     region: singapore
     plan: free
     branch: master
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install && npm run build
     # Free web services do not support Render's pre-deploy command. Run the
     # idempotent Prisma schema sync before each application start instead.
     startCommand: npx prisma db push && npm start
@@ -53,7 +53,7 @@ services:
     region: singapore
     plan: starter
     branch: master
-    buildCommand: npm ci
+    buildCommand: npm install
     startCommand: npm run worker
     autoDeployTrigger: commit
     envVars:
