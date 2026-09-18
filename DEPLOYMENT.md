@@ -120,3 +120,38 @@ Before opening the platform to public users, verify:
 - [x] **Quota enforcement**: 500 MB total account storage limit and 2 owned workspaces cap verified.
 - [x] **Zero-Trust Access Control**: Workspace membership and role (`OWNER`, `EDITOR`, `VIEWER`) checked on every single endpoint.
 - [x] **64 Automated Invariant Tests** passing via `npm test`.
+
+---
+
+## 8. Background Worker Deployment (Vercel + Worker Service)
+
+When hosting the Next.js frontend/API on **Vercel**, background jobs (thumbnail processing with Sharp, email delivery, maintenance cleanup) are enqueued to **JobOrc** asynchronously. Because Vercel is serverless and cannot run persistent daemons, the worker process runs on a service that supports continuous background execution.
+
+### Deployment Options for `npm run worker`
+
+#### Option A: Railway (Quickest & Simplest)
+1. In Railway, click **New Project** → **Deploy from GitHub repo**.
+2. Select your repository.
+3. Railway automatically detects `Procfile` (`worker: npm run worker`).
+4. In the service settings, add your Environment Variables (see Section 2 + `JOBORC_API_KEY` & `JOBORC_PROJECT_ID`).
+5. Set Build Command to `npm ci` and Start Command to `npm run worker`.
+
+#### Option B: Render Background Worker
+1. In Render Dashboard, click **New +** → **Background Worker**.
+2. Connect your Git repository.
+3. Configuration:
+   - **Environment**: Node
+   - **Build Command**: `npm ci`
+   - **Start Command**: `npm run worker`
+4. Add the required Environment Variables.
+
+#### Option C: Fly.io
+Deploy as a lightweight Node process via Fly.io VM:
+```bash
+fly launch --no-deploy
+# Set start command in fly.toml:
+# cmd = ["npm", "run", "worker"]
+fly secrets set DATABASE_URL=... JOBORC_API_KEY=... JOBORC_PROJECT_ID=...
+fly deploy
+```
+

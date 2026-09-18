@@ -128,7 +128,7 @@ export function RoleMatrix() {
             <ul className="mt-6 space-y-2.5 text-xs text-zinc-600 dark:text-zinc-400">
               <li className="flex items-start gap-2">
                 <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                <span>Upload images (up to 10 files per batch, 10MB each)</span>
+                <span>Upload images (up to 50 files per batch, 10MB each)</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />

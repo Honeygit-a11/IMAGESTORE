@@ -77,8 +77,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify password
-    const isPasswordValid = await verifyPassword(password, user.passwordHash);
+    // Verify password (and fallback to trimmed version if clipboard introduced trailing/leading whitespace)
+    let isPasswordValid = await verifyPassword(password, user.passwordHash);
+    if (!isPasswordValid && password.trim() !== password) {
+      isPasswordValid = await verifyPassword(password.trim(), user.passwordHash);
+    }
     if (!isPasswordValid) {
       const failStatus = recordFailedAttempt(rateLimitKey);
       return apiError(

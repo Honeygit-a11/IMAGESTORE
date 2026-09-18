@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 // Business Rule Constants
 const MAX_STORAGE_BYTES = 500 * 1024 * 1024; // 500 MB = 524,288,000 bytes
 const MAX_WORKSPACES_PER_USER = 2;
-const MAX_BATCH_UPLOAD_COUNT = 10;
+const MAX_BATCH_UPLOAD_COUNT = 50;
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB = 10,485,760 bytes
 const MAX_TAGS_PER_IMAGE = 20;
 
@@ -148,8 +148,8 @@ test("Business Rules: Workspace Limits (Max 2 Workspaces)", async (t) => {
 });
 
 test("Business Rules: Batch Upload & File Limits", async (t) => {
-  await t.test("accepts valid batch of up to 10 images", () => {
-    const files = Array.from({ length: 10 }, (_, i) => ({
+  await t.test("accepts valid batch of up to 50 images", () => {
+    const files = Array.from({ length: 50 }, (_, i) => ({
       name: `photo_${i}.jpg`,
       size: 2 * 1024 * 1024,
       type: "image/jpeg",
@@ -158,15 +158,15 @@ test("Business Rules: Batch Upload & File Limits", async (t) => {
     assert.equal(res.valid, true);
   });
 
-  await t.test("rejects batches with more than 10 images", () => {
-    const files = Array.from({ length: 11 }, (_, i) => ({
+  await t.test("rejects batches with more than 50 images", () => {
+    const files = Array.from({ length: 51 }, (_, i) => ({
       name: `photo_${i}.png`,
       size: 1024,
       type: "image/png",
     }));
     const res = validateUploadPayload(files);
     assert.equal(res.valid, false);
-    assert.match(res.error, /exceeds maximum limit of 10/);
+    assert.match(res.error, /exceeds maximum limit of 50/);
   });
 
   await t.test("rejects files larger than 10 MB", () => {

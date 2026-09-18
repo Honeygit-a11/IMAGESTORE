@@ -36,7 +36,7 @@ const featuresData: FeatureTab[] = [
       "Your application server never buffers heavy binary payloads. Upload transfers stream directly from the client browser straight into private S3-compatible cloud vaults using single-use, time-restricted cryptographic signatures.",
     pointsLeft: [
       "10 MB max per image with strict client-side validation",
-      "Concurrent batch uploads up to 10 files simultaneously",
+      "Concurrent batch uploads up to 50 files simultaneously",
       "Cryptographically signed short-lived presigned tokens",
       "Zero backend memory load, worker stalls, or network timeouts",
     ],

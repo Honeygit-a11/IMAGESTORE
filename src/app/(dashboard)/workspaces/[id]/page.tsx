@@ -184,7 +184,7 @@ export default function WorkspacePage() {
               className="shadow-sm"
             >
               <UploadCloud className="mr-1.5 h-4 w-4" />
-              Upload Image (Max 10MB)
+              Upload Images
             </Button>
           )}
         </div>

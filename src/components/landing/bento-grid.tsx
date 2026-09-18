@@ -115,7 +115,7 @@ export function BentoGrid() {
             <div className="text-[10px] text-zinc-400">Max File Size</div>
           </div>
           <div className="p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/60">
-            <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">10 Files</div>
+            <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">50 Files</div>
             <div className="text-[10px] text-zinc-400">Batch Upload Limit</div>
           </div>
           <div className="p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/60">

@@ -39,8 +39,8 @@ export async function POST(
       return apiError("UNAUTHORIZED", "Authentication required", undefined, 401);
     }
 
-    // Rate limit: 30 upload requests per 60 seconds per user
-    const rateLimit = applySlidingWindowRateLimit(`upload_presign:${user.id}`, 30, 60);
+    // Rate limit: 120 upload requests per 60 seconds per user (supports batches up to 50 images)
+    const rateLimit = applySlidingWindowRateLimit(`upload_presign:${user.id}`, 120, 60);
     if (!rateLimit.success) {
       return apiError(
         "RATE_LIMIT_EXCEEDED",

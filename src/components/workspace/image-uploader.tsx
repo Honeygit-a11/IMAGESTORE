@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { toast } from "sonner";
 
-const MAX_FILES = 10;
+const MAX_FILES = 50;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_TAGS = 20;
 const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif", "heic"];
@@ -345,8 +345,22 @@ export function ImageUploader({
     let successCount = 0;
     let failureCount = 0;
 
-    // Execute uploads concurrently (up to batch limit of 10)
-    const results = await Promise.all(itemsToUpload.map((item) => uploadSingleItem(item)));
+    // Execute uploads with a managed concurrency pool for optimal throughput with up to 50 files
+    const CONCURRENCY_LIMIT = 5;
+    const pool = async <T, R>(fileList: T[], limit: number, workerFn: (f: T) => Promise<R>): Promise<R[]> => {
+      const output: R[] = new Array(fileList.length);
+      let nextIdx = 0;
+      const runners = Array.from({ length: Math.min(limit, fileList.length) }, async () => {
+        while (nextIdx < fileList.length) {
+          const current = nextIdx++;
+          output[current] = await workerFn(fileList[current]);
+        }
+      });
+      await Promise.all(runners);
+      return output;
+    };
+
+    const results = await pool(itemsToUpload, CONCURRENCY_LIMIT, (item) => uploadSingleItem(item));
 
     results.forEach((success) => {
       if (success) successCount++;
@@ -397,7 +411,7 @@ export function ImageUploader({
                 Upload Images
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Max 10 files per batch · Up to 10 MB per image
+                Max 50 files per batch · Up to 10 MB per image
               </p>
             </div>
           </div>
@@ -461,6 +475,7 @@ export function ImageUploader({
               type="file"
               accept="image/*"
               capture="environment"
+              multiple
               className="hidden"
               onChange={(e) => {
                 if (e.target.files) handleAddFiles(e.target.files);

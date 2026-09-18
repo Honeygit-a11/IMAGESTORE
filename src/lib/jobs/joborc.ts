@@ -63,26 +63,31 @@ export interface EnqueueOptions {
   idempotencyKey?: string;
 }
 
+export class JobOrcConfigError extends Error {
+  readonly code = "JOBORC-CONFIG-MISSING_CREDENTIALS";
+  readonly status = 500;
+  constructor(message: string) {
+    super(message);
+    this.name = "JobOrcConfigError";
+  }
+}
+
 /**
- * Enqueues a typed background job to JobOrc.
- * If JobOrc service is temporarily unreachable, logs warning and can fallback gracefully.
+ * Enqueues a typed background job exclusively to JobOrc.
+ * Strictly throws if JobOrc is unconfigured or fails (no fallback).
  */
 export async function enqueueBackgroundJob<K extends JobName>(
   name: K,
   payload: JobPayloadMap[K],
   options?: EnqueueOptions
-): Promise<{ enqueued: boolean; jobId?: string }> {
+): Promise<{ enqueued: true; jobId: string }> {
   const apiKey = env.JOBORC_API_KEY || process.env.JOBORC_API_KEY;
   const projectId = env.JOBORC_PROJECT_ID || process.env.JOBORC_PROJECT_ID;
 
-  // If JobOrc credentials are not configured, execute in-process seamlessly
   if (!apiKey || !projectId) {
-    try {
-      await executeJobDirectly(name, payload);
-    } catch (directErr) {
-      console.error(`[Jobs] Execution failed for ${name}:`, directErr);
-    }
-    return { enqueued: false };
+    throw new JobOrcConfigError(
+      "JobOrc Background Jobs is not configured: JOBORC_API_KEY and JOBORC_PROJECT_ID are required."
+    );
   }
 
   try {
@@ -103,25 +108,19 @@ export async function enqueueBackgroundJob<K extends JobName>(
     return { enqueued: true, jobId: job.id };
   } catch (err: unknown) {
     if (err instanceof RateLimitError) {
-      console.warn(`[JobOrc] Rate limited. Retry after ${err.retryAfterSeconds}s`);
+      console.error(`[JobOrc] Rate limited on enqueue: retry after ${err.retryAfterSeconds}s`);
     } else if (err instanceof ConflictError) {
       console.error(`[JobOrc] Conflict error: ${err.message}`);
     } else if (err instanceof ValidationError) {
       console.error(`[JobOrc] Validation error:`, err.fieldErrors);
     } else if (err instanceof JobOrcError) {
-      console.warn(`[JobOrc] JobOrc API notice (${err.code}): ${err.message}`);
+      console.error(`[JobOrc] JobOrc API error (${err.code}): ${err.message}`);
     } else {
-      console.warn("[JobOrc] Could not reach JobOrc API. Executing synchronously as fallback:", err);
+      console.error("[JobOrc] JobOrc queueing failed:", err);
     }
 
-    // Fallback: Execute handler directly in process so critical actions (like emails) are not lost
-    try {
-      await executeJobDirectly(name, payload);
-    } catch (fallbackErr) {
-      console.error(`[JobOrc] Fallback execution failed for ${name}:`, fallbackErr);
-    }
-
-    return { enqueued: false };
+    // Re-throw strictly without fallback
+    throw err;
   }
 }
 

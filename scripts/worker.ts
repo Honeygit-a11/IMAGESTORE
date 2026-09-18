@@ -1,3 +1,12 @@
+import fs from "node:fs";
+
+// Load local .env file if present (in cloud platforms like Render/Railway/Fly, environment variables are injected directly)
+if (fs.existsSync(".env")) {
+  try {
+    process.loadEnvFile?.(".env");
+  } catch {}
+}
+
 import { createJobOrcWorker } from "../src/lib/jobs/joborc";
 
 async function main() {

@@ -10,7 +10,7 @@ import { apiSuccess, apiError, handleApiError } from "@/lib/api/response";
  * - Direct execution
  * - JobOrc asynchronous background queueing (?enqueue=true)
  */
-export async function POST(req: NextRequest) {
+async function handleJobRun(req: NextRequest) {
   try {
     const authHeader = req.headers.get("authorization");
     const cronSecretHeader = req.headers.get("x-cron-secret");
@@ -23,30 +23,32 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const shouldEnqueue = req.nextUrl.searchParams.get("enqueue") === "true";
+    // Exclusively enqueue via JobOrc Background Jobs (no fallback)
+    const result = await enqueueBackgroundJob(
+      "maintenance.cleanup",
+      { triggeredBy: "cron-api" },
+      { queue: "maintenance", priority: 5 }
+    );
 
-    if (shouldEnqueue) {
-      const result = await enqueueBackgroundJob(
-        "maintenance.cleanup",
-        { triggeredBy: "cron-api" },
-        { queue: "maintenance", priority: 5 }
-      );
-
-      return apiSuccess({
+    return apiSuccess(
+      {
         status: "ENQUEUED",
         jobId: result.jobId,
-        enqueued: result.enqueued,
+        queue: "maintenance",
         message: "Maintenance task enqueued to JobOrc queue: maintenance",
-      });
-    }
-
-    const results = await runAllMaintenanceJobs();
-
-    return apiSuccess({
-      status: "COMPLETED",
-      ...results,
-    });
+      },
+      undefined,
+      202
+    );
   } catch (error) {
     return handleApiError(error);
   }
+}
+
+export async function POST(req: NextRequest) {
+  return handleJobRun(req);
+}
+
+export async function GET(req: NextRequest) {
+  return handleJobRun(req);
 }

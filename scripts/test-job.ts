@@ -22,8 +22,8 @@ async function runTest() {
     console.error("❌ Direct job handler failed:", err);
   }
 
-  // Test 2: Enqueue Job to JobOrc
-  console.log("\n[Test 2] Enqueueing background job 'maintenance.cleanup'...");
+  // Test 2: Enqueue Job strictly to JobOrc (no fallback)
+  console.log("\n[Test 2] Enqueueing background job 'maintenance.cleanup' strictly to JobOrc...");
   try {
     const enqueueResult = await enqueueBackgroundJob(
       "maintenance.cleanup",
@@ -36,21 +36,19 @@ async function runTest() {
       }
     );
 
-    if (enqueueResult.enqueued) {
-      console.log(`✅ Successfully enqueued to JobOrc! Job ID: ${enqueueResult.jobId}`);
-      console.log("   The job is now in the 'maintenance' queue waiting for worker pickup.");
-    } else {
-      console.log("ℹ️ JobOrc API did not accept queue request (fallback executed in-process).");
-      console.log("   Check network/DNS or verify if JOBORC_BASE_URL needs custom endpoint.");
+    console.log(`✅ Successfully enqueued to JobOrc! Job ID: ${enqueueResult.jobId}`);
+    console.log("   The job is now in the 'maintenance' queue waiting for worker pickup.");
+  } catch (err: unknown) {
+    console.error("❌ JobOrc Enqueue Failed (strict mode, no fallback):", (err as Error).message);
+    if ((err as Record<string, unknown>).code) {
+      console.error(`   Error Code: ${(err as Record<string, unknown>).code}`);
     }
-  } catch (err) {
-    console.error("❌ Enqueue failed with unexpected error:", err);
   }
 
   // Test 3: API Endpoint Test
   console.log("\n[Test 3] Testing /api/v1/jobs/run endpoint integration...");
-  console.log("   You can trigger a background job via HTTP:");
-  console.log("   curl -X POST http://localhost:3001/api/v1/jobs/run?enqueue=true \\");
+  console.log("   You can trigger JobOrc background queueing via HTTP:");
+  console.log("   curl -X POST http://localhost:3001/api/v1/jobs/run \\");
   console.log("     -H 'x-cron-secret: your-cron-secret'");
 
   console.log("\n==================================================");

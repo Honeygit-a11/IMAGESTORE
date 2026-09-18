@@ -22,7 +22,7 @@ const steps = [
     step: "03",
     title: "Upload images",
     description:
-      "Drag and drop up to 10 images at once. Files up to 10 MB transfer directly to private storage using secure presigned URLs.",
+      "Drag and drop up to 50 images at once. Files up to 10 MB transfer directly to private storage using secure presigned URLs.",
     icon: UploadCloud,
   },
   {

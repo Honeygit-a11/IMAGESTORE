@@ -47,6 +47,44 @@ services:
       - key: SMTP_FROM
         sync: false
 
+  - type: worker
+    name: imagespace-worker
+    runtime: node
+    region: singapore
+    plan: starter
+    branch: master
+    buildCommand: npm ci
+    startCommand: npm run worker
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: imagespace-postgres
+          property: connectionString
+      - fromGroup: imagespace-internal-secrets
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: JOBORC_API_KEY
+        sync: false
+      - key: JOBORC_PROJECT_ID
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+
   - type: cron
     name: imagespace-maintenance
     runtime: node
